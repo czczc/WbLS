@@ -71,11 +71,23 @@ void toTree(TString from="../gen/wcsim.root", TString saveTo="../gen/simTree.roo
         Reset();
         wcsimT->GetEvent(j);
         
+        // this is only the first trigger
         WCSimRootTrigger *wcsimrootevent = wcsimrootsuperevent->GetTrigger(0);
         
         // Track info
         int ntrack =  wcsimrootevent->GetNtrack();
         WCSimRootTrack* lastTrack = wcsimrootevent->GetTracks()->At(ntrack-1);
+        cout << "=======" << endl; 
+        cout << "nTrack: " << ntrack << endl;
+        for (int i=0; i<ntrack; i++) {
+            WCSimRootTrack* tk = wcsimrootevent->GetTracks()->At(i);
+            cout << "Ipnu: " << tk->GetIpnu() << " "
+                << "Parent: " << tk->GetParenttype() << " "
+                << "Start: " << tk->GetStart() << " "
+                << "Stop: " << tk->GetStop() << " "
+                << "time: " << tk->GetTime() << " " 
+                << "E: " << tk->GetE() << endl;
+        }
         momemtum = lastTrack->GetP();
         // cout << momemtum << endl;
         for (int i=0; i<3; i++) {
@@ -89,13 +101,13 @@ void toTree(TString from="../gen/wcsim.root", TString saveTo="../gen/simTree.roo
         
         // PrintTrigger(wcsimrootevent);
         
-        cout << "=======" << endl; 
-        cout << "Hit Tubes: " << wcsimrootevent->GetNumTubesHit() << endl;
-        cout << "Digi Tubes: " << wcsimrootevent->GetNumDigiTubesHit() << endl;
-        cout << "CK Hits: " << wcsimrootevent->GetNcherenkovhits() << endl;
-        cout << "CK Hit Times: " << wcsimrootevent->GetNcherenkovhittimes() << endl;
-        cout << "CK Digi Hits: " << wcsimrootevent->GetNcherenkovhits() << endl;
-        cout << "=======\n" << endl;
+        // cout << "=======" << endl; 
+        // cout << "Hit Tubes: " << wcsimrootevent->GetNumTubesHit() << endl;
+        // cout << "Digi Tubes: " << wcsimrootevent->GetNumDigiTubesHit() << endl;
+        // cout << "CK Hits: " << wcsimrootevent->GetNcherenkovhits() << endl;
+        // cout << "CK Hit Times: " << wcsimrootevent->GetNcherenkovhittimes() << endl;
+        // cout << "CK Digi Hits: " << wcsimrootevent->GetNcherenkovhits() << endl;
+        // cout << "=======\n" << endl;
                 
         //Digi Hits
         TClonesArray* digiHits = wcsimrootevent->GetCherenkovDigiHits();

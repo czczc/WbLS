@@ -10,6 +10,7 @@
 *.so
 *.a
 *.exe
+*.d
 
 # generated files #
 ###################
