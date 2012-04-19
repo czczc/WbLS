@@ -13,7 +13,7 @@
     
     gROOT->ProcessLine( load + prefix + "/CEvent.cc+" );
     
-    CEvent ev("../gen/wcsim.root", "events.root");
+    CEvent ev("../gen/wcsim100.root", "events100.root");
     ev.Loop();
     
 }

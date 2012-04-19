@@ -26,12 +26,29 @@ CEvent::CEvent(const char* filename, const char* outname)
     wcsimT = (TTree*)rootFile->Get("wcsimT");
     wcsimT->SetBranchAddress("wcsimrootevent", &rawEvent);
     
+    InitDecayMode();
     InitOutput(outname);
     InitPMTGeom();
 }
 
 CEvent::~CEvent()
 {
+}
+
+void CEvent::InitDecayMode()
+{
+    // 63.47%
+    decayMode[11] = "K+ -> mu+ + nu_mu, mu+ -> e+ + nu_mu| + nu_e"; // 321 -> 14 + -13, -13 -> -11 + -14 + 12
+    // 21.13%
+    decayMode[21] = "K+ -> pi+ + pi0, pi+ -> mu+ + nu_mu, mu+ -> e+ + nu_mu| + nu_e, pi0 -> 2*gamma"; 
+    // 5.58%
+    decayMode[31] = "K+ -> 2*pi+ + pi-,  pi+ -> mu+ + nu_mu, mu+ -> e+ + nu_mu| + nu_e, pi- disppear";
+    // 4.87%
+    decayMode[41] = "K+ -> pi0 + e+ + nu_e, pi0 -> 2*gamma";
+    // 3.27%
+    decayMode[51] = "K+ -> pi0 + mu+ + nu_mu, mu+ -> e+ + nu_mu| + nu_e, pi0 -> 2*gamma,";
+    // 1.73%
+    decayMode[61] = "K+ -> pi+ + 2*pi0, pi+ -> mu+ + nu_mu, mu+ -> e+ + nu_mu| + nu_e, pi0 -> 2*gamma"; 
 }
 
 void CEvent::InitOutput(const char* filename)
@@ -43,6 +60,7 @@ void CEvent::InitOutput(const char* filename)
     outputTree = new TTree("Sim","Event Tree from Simulation");
     
     outputTree->Branch("eventNumber", &eventNumber, "eventNumber/I");
+    outputTree->Branch("mode", &mode, "mode/I");
     outputTree->Branch("nTrigger", &nTrigger, "nTrigger/I");
     
     outputTree->Branch("nTrack", &nTrack, "nTrack/I");
@@ -119,7 +137,9 @@ void CEvent::Loop(int maxEntry)
             nPMT += rawTrigger->GetNcherenkovhits();
         }
         
-        PrintInfo();
+        DetermineDecayMode();
+        // if (mode<10)
+            PrintInfo();
         outputTree->Fill();
     }
     SaveOutput();
@@ -188,6 +208,44 @@ void CEvent::Reset()
 {
 }
 
+void CEvent::DetermineDecayMode()
+{
+    if (nTrack <= 2) { mode = -2; } // unphyiscal
+    else if (track_pdg[2] != 321) { mode = -1; } // not K+ primary
+    else {
+        if (nTrack == 8) {
+            if (track_pdg[3] == 14 && track_pdg[4] == -13) { mode = 11; }
+            else if (track_pdg[3] == 111 && track_pdg[4] == 12 && track_pdg[7] == -11) { mode = 41; }
+            else { mode = 1; } // unknown 8 tracks
+        }
+        else if (nTrack == 11) {
+            if (track_pdg[3] == 111 && track_pdg[4] == 14 && track_pdg[7] == -13) { mode = 51; }
+            else { mode = 2; } // unknown 11 tracks
+        }
+        else if (nTrack == 12) {
+            if (track_pdg[3] == 111 && track_pdg[6] == 211) { mode = 21; }
+            else { mode = 3; } // unknown 12 tracks
+        }
+        else if (nTrack == 15) {
+            if (track_pdg[3] == 111 && track_pdg[4] == 111 && track_pdg[9] == 211) { mode = 61; }
+            else { mode = 4; } // unknown 15 tracks
+        }
+        else if (nTrack == 16) {
+            int pi_plus = 0;
+            int pi_minus = 0;
+            for (int i=0; i<nTrack; i++) {
+                if (track_pdg[i] == 211) { pi_plus++; }
+                else if (track_pdg[i] == -211) { pi_minus++; }
+            }
+            if (pi_minus==1 && pi_plus==2) { mode = 31; }
+            else { mode = 5; } // unknown 16 tracks
+        }
+        else {
+            mode = 0; // unknown K+ decay
+        }
+    } 
+}
+
 void CEvent::PrintInfo()
 {
     cout << "=================================\n";
@@ -195,8 +253,9 @@ void CEvent::PrintInfo()
          << " | nTrack: "<< nTrack 
          << " | nPMT: "<< nPMT 
          << " | nHit: "<< nHit 
+         << "\n\tDecay Mode " << mode << ": " << decayMode[mode]
          << "\n";
-    for (int i=0; i<nTrack; i++) {
+    for (int i=2; i<nTrack; i++) {
          cout << "\tPDG: " << track_pdg[i] 
              << " | Parent: " << track_parent[i]
              << " | Time: " << track_t[i]

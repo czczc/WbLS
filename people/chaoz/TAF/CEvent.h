@@ -3,6 +3,9 @@
 
 #include "TObject.h"
 
+#include <map>
+#include <string>
+
 class TFile;
 class TTree;
 class WCSimRootEvent;
@@ -15,6 +18,7 @@ public:
     WCSimRootEvent *rawEvent;
     TFile *outputFile;
     TTree *outputTree;
+    map<int, string> decayMode;
     
     enum State {
         MAXTRACK = 100,
@@ -26,6 +30,7 @@ public:
     
     int eventNumber;
     int nTrigger;
+    int mode;
     
     int nTrack;
     int track_pdg[MAXTRACK];
@@ -56,6 +61,7 @@ public:
     void InitOutput(const char* filename);
     void SaveOutput();
     void InitPMTGeom();
+    void InitDecayMode();
     
     void Loop(int maxEntry=-1);
     void ProcessTracks(WCSimRootTrigger* trigger, int currentTracks);
@@ -65,6 +71,7 @@ public:
     
 private:    
     float VertexCorrectedTime(int idx);
+    void DetermineDecayMode();
     
 };
 

@@ -47,11 +47,11 @@
 # command to choose save or not save the pi0 info 07/03/10 (XQ)
 /WCSim/SavePi0 true
 
-/vis/scene/create
-/vis/open OGLSX
-/vis/viewer/set/upVector 0 0 1
-# /vis/viewer/set/viewpointThetaPhi 45 45 deg
-/vis/viewer/set/viewpointThetaPhi 120 90 deg
+# /vis/scene/create
+# /vis/open OGLSX
+# /vis/viewer/set/upVector 0 0 1
+# # /vis/viewer/set/viewpointThetaPhi 45 45 deg
+# /vis/viewer/set/viewpointThetaPhi 120 90 deg
 
 #/vis/open RayTracer 
 #/vis/viewer/set/upVector 0 0 1
@@ -110,7 +110,7 @@
 
 
 ## change the name of the output root file, default = wcsim.root
-/WCSimIO/RootFile wcsim.root
-/gun/direction 0 1 0 
-/run/beamOn 10
+/WCSimIO/RootFile wcsim100.root
+/WCSim/random/seed 200
+/run/beamOn 100
 #exit

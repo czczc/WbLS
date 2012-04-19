@@ -528,19 +528,25 @@ void WCSimEventAction::FillRootEvent(G4int event_id,
       // This may change later
       // M Fechner : dec 16, 2004 --> added decay e- from muons
       if (trj->GetParentID() == 0){
-	parentType = 0;
+	      parentType = 0;
       } else if (pizeroList.count(trj->GetParentID())   ) {
-	parentType = 111;
+	      parentType = 111;
       } else if (muonList.count(trj->GetParentID())     ) {
-	parentType = 13;
+	      parentType = 13;
       } else if (antimuonList.count(trj->GetParentID()) ) {
-	parentType = -13;
+	      parentType = -13;
       } else if (antipionList.count(trj->GetParentID()) ) {
-	parentType = -211;
+	      parentType = -211;
       } else if (pionList.count(trj->GetParentID()) ) {
-	parentType = 211;
-      } else {  // no identified parent, but not a primary
-	parentType = 999;
+	      parentType = 211;
+      } else if (trj->GetParentID() == 1) {
+          parentType = 1; // gun
+      } else if (trj->GetParentID() == 321) {
+          parentType = 321; // gun
+      }
+      else {  // no identified parent, but not a primary
+          G4cout << "NOT FOUNT PARENT: " << trj->GetParentID() << "\n";
+	      parentType = 999;
       }
 
       // G4cout << parentType << " " << ipnu << " " 
@@ -562,7 +568,8 @@ void WCSimEventAction::FillRootEvent(G4int event_id,
 
 
       // Add the track to the TClonesArray, watching out for times
-      if ( ! ( (ipnu==22)&&(parentType==999))  ) {
+      // remove self tracks -- Chao 2012-04-19
+      if ( ! ( (ipnu==22)&&(parentType==999) || (ipnu==parentType) || (ipnu==321 && parentType==1)) || ipnu ==0  ) {
 	int choose_event=0;
 
 	if (ngates)
