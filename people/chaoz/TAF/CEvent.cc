@@ -1,0 +1,210 @@
+#include "CEvent.h"
+
+#include <iostream>
+
+#include "TFile.h"
+#include "TTree.h"
+#include "TDirectory.h"
+#include "TVector3.h"
+
+#include "WCSimRootEvent.hh"
+#include "WCSimRootGeom.hh"
+
+using namespace std;
+
+CEvent::CEvent()
+    :rootFile(0), wcsimT(0), rawEvent(0), outputFile(0), outputTree(0)
+{
+  
+}
+
+CEvent::CEvent(const char* filename, const char* outname)
+{
+    rootFile = new TFile(filename);
+    rawEvent = new WCSimRootEvent();
+    
+    wcsimT = (TTree*)rootFile->Get("wcsimT");
+    wcsimT->SetBranchAddress("wcsimrootevent", &rawEvent);
+    
+    InitOutput(outname);
+    InitPMTGeom();
+}
+
+CEvent::~CEvent()
+{
+}
+
+void CEvent::InitOutput(const char* filename)
+{
+    TDirectory* tmpDir = gDirectory;
+    outputFile = new TFile(filename, "recreate");
+    TDirectory* subDir = outputFile->mkdir("Event");
+    subDir->cd();
+    outputTree = new TTree("Sim","Event Tree from Simulation");
+    
+    outputTree->Branch("eventNumber", &eventNumber, "eventNumber/I");
+    outputTree->Branch("nTrigger", &nTrigger, "nTrigger/I");
+    
+    outputTree->Branch("nTrack", &nTrack, "nTrack/I");
+    outputTree->Branch("track_pdg", &track_pdg, "track_pdg[nTrack]/I");
+    outputTree->Branch("track_parent", &track_parent, "track_parent[nTrack]/I");
+    outputTree->Branch("track_t", &track_t, "track_t[nTrack]/F");
+    outputTree->Branch("track_e", &track_ee, "track_e[nTrack]/F");
+    outputTree->Branch("track_ee", &track_ee, "track_ee[nTrack]/F");
+    outputTree->Branch("track_x", &track_x, "track_x[nTrack]/F");
+    outputTree->Branch("track_y", &track_y, "track_y[nTrack]/F");
+    outputTree->Branch("track_z", &track_z, "track_z[nTrack]/F");
+    outputTree->Branch("track_dx", &track_x, "track_dx[nTrack]/F");
+    outputTree->Branch("track_dy", &track_y, "track_dy[nTrack]/F");
+    outputTree->Branch("track_dz", &track_z, "track_dz[nTrack]/F");
+    
+    outputTree->Branch("nPMT", &nPMT, "nPMT/I");
+    outputTree->Branch("nHit", &nHit, "nHit/I");
+    outputTree->Branch("hit_pmtID", &hit_pmtID, "hit_pmtID[nHit]/I");
+    outputTree->Branch("hit_t", &hit_t, "hit_t[nHit]/F");
+    outputTree->Branch("hit_tc", &hit_tc, "hit_tc[nHit]/F");
+    outputTree->Branch("hit_wl", &hit_wl, "hit_wl[nHit]/F");
+    
+    gDirectory = tmpDir;
+}
+
+void CEvent::SaveOutput()
+{
+    TDirectory* tmpDir = gDirectory;
+    outputFile->cd("/Event");
+    outputTree->Write();
+    outputTree = 0;
+        
+    gDirectory = tmpDir;
+}
+
+void CEvent::InitPMTGeom()
+{
+    // PMT Geometry Tree
+    TTree *gtree = (TTree*)rootFile->Get("wcsimGeoT");
+    WCSimRootGeom *wcsimrootgeom = new WCSimRootGeom();
+    gtree->GetBranch("wcsimrootgeom")->SetAddress(&wcsimrootgeom);
+    gtree->GetEntry(0);
+    int totalPMTs = wcsimrootgeom->GetWCNumPMT();
+    cout << "total PMTs: " << totalPMTs << endl;
+    for (int i=0; i!=totalPMTs; i++){
+        for (int j=0; j<3; j++) {
+            pmt_pos[i][j] = (wcsimrootgeom->GetPMT(i)).GetPosition(j);
+        }
+    }
+}
+
+void CEvent::Loop(int maxEntry)
+{
+    int nEvent = maxEntry;
+    if (maxEntry == -1) nEvent = wcsimT->GetEntries();
+    for (int entry=0; entry<nEvent; entry++) {
+        wcsimT->GetEntry(entry);
+        
+        eventNumber = entry+1;
+        nTrigger = rawEvent->GetNumberOfEvents();
+        nTrack = 0;
+        nPMT = 0;
+        nHit = 0;
+        
+        for (int trigIdx=0; trigIdx<nTrigger; trigIdx++) {
+            WCSimRootTrigger *rawTrigger = rawEvent->GetTrigger(trigIdx);
+            
+            ProcessTracks(rawTrigger, nTrack);
+            nTrack += rawTrigger->GetNtrack();
+            
+            // raw hits info are all in the first trigger. (what??)
+            if (trigIdx!=0) continue;
+            ProcessHits(rawTrigger, nHit);
+            nPMT += rawTrigger->GetNcherenkovhits();
+        }
+        
+        PrintInfo();
+        outputTree->Fill();
+    }
+    SaveOutput();
+}
+
+void CEvent::ProcessTracks(WCSimRootTrigger* trigger, int currentTracks)
+{
+    int ntrack = trigger->GetNtrack();
+    // cout << ntrack << endl;
+    
+    for (int i=0; i<ntrack; i++) {
+        WCSimRootTrack* track = (WCSimRootTrack*)trigger->GetTracks()->At(i);
+        int idx = i+currentTracks;
+        track_pdg[idx] = track->GetIpnu();
+        track_parent[idx] = track->GetParenttype();
+        track_t[idx] = track->GetTime();
+        track_ee[idx] = track->GetE();
+        track_e[idx] = track->GetE() - track->GetM();
+        track_x[idx] = track->GetStart(0);
+        track_y[idx] = track->GetStart(1);
+        track_z[idx] = track->GetStart(2);
+        track_dx[idx] = track->GetDir(0);
+        track_dy[idx] = track->GetDir(1);
+        track_dz[idx] = track->GetDir(2);
+    }
+}
+
+void CEvent::ProcessHits(WCSimRootTrigger* trigger, int currentHits)
+{
+    int npmt = trigger->GetNcherenkovhits();
+    // cout << nhit << endl;
+    for (int i=0; i<npmt; i++) {
+        WCSimRootCherenkovHit* hit = (WCSimRootCherenkovHit*)trigger->GetCherenkovHits()->At(i);
+        int hitIdx = hit->GetTotalPe(0);
+        int pmtPEs = hit->GetTotalPe(1);
+        // cout << hitIdx << ", " << pmtPEs << endl;
+        for (int j=0; j<pmtPEs; j++) {
+            WCSimRootCherenkovHitTime* hittime = (WCSimRootCherenkovHitTime*)trigger->GetCherenkovHitTimes()->At(hitIdx+j);
+            int idx = hitIdx + j + currentHits;
+            hit_t[idx] = hittime->GetTruetime();
+            hit_wl[idx] = hittime->GetWavelength();
+            hit_pmtID[idx] = hit->GetTubeID()-1;
+            hit_tc[idx] = VertexCorrectedTime(idx);
+            
+            nHit++;
+        }
+    }
+
+}
+
+float CEvent::VertexCorrectedTime(int idx)
+{   
+    // assuming we can reconstruct the vertex ...
+    int tubeIdx = hit_pmtID[idx];
+    float tube_x = pmt_pos[tubeIdx][0];
+    float tube_y = pmt_pos[tubeIdx][1];
+    float tube_z = pmt_pos[tubeIdx][2];
+    
+    TVector3 vtx3(track_x[2], track_y[2], track_z[2]);
+    TVector3 hit3(tube_x, tube_y, tube_z);
+    float rindex = 1.3492;
+    return hit_t[idx] - (vtx3-hit3).Mag()/299792458.*rindex*1.e7; // position in cm
+}
+
+void CEvent::Reset()
+{
+}
+
+void CEvent::PrintInfo()
+{
+    cout << "=================================\n";
+    cout << "#" << eventNumber << ": nTrigger: " << nTrigger 
+         << " | nTrack: "<< nTrack 
+         << " | nPMT: "<< nPMT 
+         << " | nHit: "<< nHit 
+         << "\n";
+    for (int i=0; i<nTrack; i++) {
+         cout << "\tPDG: " << track_pdg[i] 
+             << " | Parent: " << track_parent[i]
+             << " | Time: " << track_t[i]
+             << " | KE: " << track_e[i]
+             << " | E: " << track_ee[i]
+             << " | Vtx: (" << track_x[i] << ", " << track_y[i] << ", " << track_z[i] << ")" 
+             << " | Dir: (" << track_dx[i] << ", " << track_dy[i] << ", " << track_dz[i] << ")" 
+             << "\n";
+    }
+    cout << endl;
+}

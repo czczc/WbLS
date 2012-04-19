@@ -18,6 +18,7 @@
 *.root
 *.gif
 *.png
+*.pdf
 .DS_Store*
 Thumbs.db
 .log_logon.txt
