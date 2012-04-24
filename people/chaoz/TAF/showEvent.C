@@ -32,7 +32,7 @@ void draw()
 	gPad->SetLogx();
 	Sim->Draw("hit_tc>>h(20000,1,20000)", drawStr);
 	TH1F *h = (TH1F*)gDirectory->FindObject("h");
-	title.Form("Event %i: %s", entry+1, modeText[mode]);
+	title.Form("Event %i: %s", entry, modeText[mode]);
 	h->SetTitle(title);
 	h->GetXaxis()->SetTitle("Hit Time [ns]");
 	h->GetYaxis()->SetTitle("Number of PE");
@@ -69,7 +69,7 @@ void show()
 
 void init()
 {
-	modeText[0] = "Unknown??";
+	modeText[0]  = "Unknown??";
 	modeText[11] = "K^{+} -> #mu^{+} + #nu_{#mu} (63.47%)";
 	modeText[21] = "K^{+} -> #pi^{+} + #pi^{0} (21.13%)";
 	modeText[31] = "K^{+} -> #pi^{+} + #pi^{+} + #pi^{-} (5.58%)";

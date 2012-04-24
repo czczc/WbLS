@@ -1,24 +1,20 @@
-#ifndef _CEVENT_H
-#define _CEVENT_H
+#ifndef MCEVENT_H
+#define MCEVENT_H
 
 #include "TObject.h"
 
 #include <map>
 #include <string>
+#include "TTree.h"
 
 class TFile;
-class TTree;
-class WCSimRootEvent;
-class WCSimRootTrigger;
 
-class CEvent {
+class MCEvent {
 public:
     TFile *rootFile;
-    TTree *wcsimT;
-    WCSimRootEvent *rawEvent;
-    TFile *outputFile;
-    TTree *outputTree;
+    TTree *simTree;
     TTree *geoTree;
+
     map<int, string> decayMode;
 
     enum State {
@@ -29,8 +25,6 @@ public:
 
     float cylRadius;
     float cylLength;
-    int geoType;
-    int orientation;
     int totalPMTs;
     float pmt_x[MAXPMT];
     float pmt_y[MAXPMT];
@@ -61,25 +55,19 @@ public:
     float hit_wl[MAXHIT];
 
 
-    CEvent();
-    CEvent(const char* filename, const char* outname);
-    virtual ~CEvent();
+    MCEvent();
+    MCEvent(const char* filename);
+    virtual ~MCEvent();
 
     //  methods
-    void InitOutput(const char* filename);
-    void SaveOutput();
-    void InitPMTGeom();
-    void InitDecayMode();
-
-    void Loop(int maxEntry=-1);
-    void ProcessTracks(WCSimRootTrigger* trigger, int currentTracks);
-    void ProcessHits(WCSimRootTrigger* trigger, int currentHits);
-    void Reset();
-    virtual void PrintInfo();
+    TTree* Tree() { return simTree; }
+    void GetEntry(int i) { simTree->GetEntry(i); }
+    void PrintInfo();
 
 private:
-    float VertexCorrectedTime(int idx);
-    void DetermineDecayMode();
+    void InitBranchAddress();
+    void InitDecayMode();
+    void InitGeometry();
 
 };
 

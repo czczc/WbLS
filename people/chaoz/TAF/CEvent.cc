@@ -13,19 +13,17 @@
 using namespace std;
 
 CEvent::CEvent()
-    :rootFile(0), wcsimT(0), rawEvent(0), outputFile(0), outputTree(0)
-{
-  
-}
+    :rootFile(0), wcsimT(0), rawEvent(0), outputFile(0), outputTree(0), geoTree(0)
+{}
 
 CEvent::CEvent(const char* filename, const char* outname)
 {
     rootFile = new TFile(filename);
     rawEvent = new WCSimRootEvent();
-    
+
     wcsimT = (TTree*)rootFile->Get("wcsimT");
     wcsimT->SetBranchAddress("wcsimrootevent", &rawEvent);
-    
+
     InitDecayMode();
     InitOutput(outname);
     InitPMTGeom();
@@ -40,7 +38,7 @@ void CEvent::InitDecayMode()
     // 63.47%
     decayMode[11] = "K+ -> mu+ + nu_mu, mu+ -> e+ + nu_mu| + nu_e"; // 321 -> 14 + -13, -13 -> -11 + -14 + 12
     // 21.13%
-    decayMode[21] = "K+ -> pi+ + pi0, pi+ -> mu+ + nu_mu, mu+ -> e+ + nu_mu| + nu_e, pi0 -> 2*gamma"; 
+    decayMode[21] = "K+ -> pi+ + pi0, pi+ -> mu+ + nu_mu, mu+ -> e+ + nu_mu| + nu_e, pi0 -> 2*gamma";
     // 5.58%
     decayMode[31] = "K+ -> 2*pi+ + pi-,  pi+ -> mu+ + nu_mu, mu+ -> e+ + nu_mu| + nu_e, pi- disppear";
     // 4.87%
@@ -48,7 +46,7 @@ void CEvent::InitDecayMode()
     // 3.27%
     decayMode[51] = "K+ -> pi0 + mu+ + nu_mu, mu+ -> e+ + nu_mu| + nu_e, pi0 -> 2*gamma,";
     // 1.73%
-    decayMode[61] = "K+ -> pi+ + 2*pi0, pi+ -> mu+ + nu_mu, mu+ -> e+ + nu_mu| + nu_e, pi0 -> 2*gamma"; 
+    decayMode[61] = "K+ -> pi+ + 2*pi0, pi+ -> mu+ + nu_mu, mu+ -> e+ + nu_mu| + nu_e, pi0 -> 2*gamma";
 }
 
 void CEvent::InitOutput(const char* filename)
@@ -58,31 +56,43 @@ void CEvent::InitOutput(const char* filename)
     TDirectory* subDir = outputFile->mkdir("Event");
     subDir->cd();
     outputTree = new TTree("Sim","Event Tree from Simulation");
-    
-    outputTree->Branch("eventNumber", &eventNumber, "eventNumber/I");
-    outputTree->Branch("mode", &mode, "mode/I");
-    outputTree->Branch("nTrigger", &nTrigger, "nTrigger/I");
-    
-    outputTree->Branch("nTrack", &nTrack, "nTrack/I");
-    outputTree->Branch("track_pdg", &track_pdg, "track_pdg[nTrack]/I");
+
+    outputTree->Branch("eventNumber" , &eventNumber, "eventNumber/I");
+    outputTree->Branch("mode"        , &mode, "mode/I");
+    outputTree->Branch("nTrigger"    , &nTrigger, "nTrigger/I");
+
+    outputTree->Branch("nTrack"      , &nTrack, "nTrack/I");
+    outputTree->Branch("track_pdg"   , &track_pdg, "track_pdg[nTrack]/I");
     outputTree->Branch("track_parent", &track_parent, "track_parent[nTrack]/I");
-    outputTree->Branch("track_t", &track_t, "track_t[nTrack]/F");
-    outputTree->Branch("track_e", &track_ee, "track_e[nTrack]/F");
-    outputTree->Branch("track_ee", &track_ee, "track_ee[nTrack]/F");
-    outputTree->Branch("track_x", &track_x, "track_x[nTrack]/F");
-    outputTree->Branch("track_y", &track_y, "track_y[nTrack]/F");
-    outputTree->Branch("track_z", &track_z, "track_z[nTrack]/F");
-    outputTree->Branch("track_dx", &track_x, "track_dx[nTrack]/F");
-    outputTree->Branch("track_dy", &track_y, "track_dy[nTrack]/F");
-    outputTree->Branch("track_dz", &track_z, "track_dz[nTrack]/F");
-    
-    outputTree->Branch("nPMT", &nPMT, "nPMT/I");
-    outputTree->Branch("nHit", &nHit, "nHit/I");
-    outputTree->Branch("hit_pmtID", &hit_pmtID, "hit_pmtID[nHit]/I");
-    outputTree->Branch("hit_t", &hit_t, "hit_t[nHit]/F");
-    outputTree->Branch("hit_tc", &hit_tc, "hit_tc[nHit]/F");
-    outputTree->Branch("hit_wl", &hit_wl, "hit_wl[nHit]/F");
-    
+    outputTree->Branch("track_t"     , &track_t, "track_t[nTrack]/F");
+    outputTree->Branch("track_e"     , &track_e, "track_e[nTrack]/F");
+    outputTree->Branch("track_ee"    , &track_ee, "track_ee[nTrack]/F");
+    outputTree->Branch("track_x"     , &track_x, "track_x[nTrack]/F");
+    outputTree->Branch("track_y"     , &track_y, "track_y[nTrack]/F");
+    outputTree->Branch("track_z"     , &track_z, "track_z[nTrack]/F");
+    outputTree->Branch("track_dx"    , &track_dx, "track_dx[nTrack]/F");
+    outputTree->Branch("track_dy"    , &track_dy, "track_dy[nTrack]/F");
+    outputTree->Branch("track_dz"    , &track_dz, "track_dz[nTrack]/F");
+
+    outputTree->Branch("nPMT"        , &nPMT, "nPMT/I");
+    outputTree->Branch("nHit"        , &nHit, "nHit/I");
+    outputTree->Branch("hit_pmtID"   , &hit_pmtID, "hit_pmtID[nHit]/I");
+    outputTree->Branch("hit_t"       , &hit_t, "hit_t[nHit]/F");
+    outputTree->Branch("hit_tc"      , &hit_tc, "hit_tc[nHit]/F");
+    outputTree->Branch("hit_wl"      , &hit_wl, "hit_wl[nHit]/F");
+
+    TDirectory* subDir2 = outputFile->mkdir("Detector");
+    subDir2->cd();
+    geoTree = new TTree("Geometry", "Detector Geometry");
+    geoTree->Branch("cylRadius", &cylRadius, "cylRadius/F");
+    geoTree->Branch("cylLength", &cylLength, "cylLength/F");
+    geoTree->Branch("orientation", &orientation, "orientation/I");
+    geoTree->Branch("geoType", &geoType, "geoType/I");
+    geoTree->Branch("totalPMTs", &totalPMTs, "totalPMTs/I");
+    geoTree->Branch("pmt_x", &pmt_x, "pmt_x[totalPMTs]/F");
+    geoTree->Branch("pmt_y", &pmt_y, "pmt_y[totalPMTs]/F");
+    geoTree->Branch("pmt_z", &pmt_z, "pmt_z[totalPMTs]/F");
+
     gDirectory = tmpDir;
 }
 
@@ -92,7 +102,7 @@ void CEvent::SaveOutput()
     outputFile->cd("/Event");
     outputTree->Write();
     outputTree = 0;
-        
+
     gDirectory = tmpDir;
 }
 
@@ -103,13 +113,26 @@ void CEvent::InitPMTGeom()
     WCSimRootGeom *wcsimrootgeom = new WCSimRootGeom();
     gtree->GetBranch("wcsimrootgeom")->SetAddress(&wcsimrootgeom);
     gtree->GetEntry(0);
-    int totalPMTs = wcsimrootgeom->GetWCNumPMT();
-    cout << "total PMTs: " << totalPMTs << endl;
+
+    cylRadius = wcsimrootgeom->GetWCCylRadius();
+    cylLength = wcsimrootgeom->GetWCCylLength();
+    geoType   = wcsimrootgeom->GetGeo_Type();
+    orientation = wcsimrootgeom->GetOrientation();
+    totalPMTs = wcsimrootgeom->GetWCNumPMT();
+    // cout << "total PMTs: " << totalPMTs << endl;
     for (int i=0; i!=totalPMTs; i++){
-        for (int j=0; j<3; j++) {
-            pmt_pos[i][j] = (wcsimrootgeom->GetPMT(i)).GetPosition(j);
-        }
+        pmt_x[i] = wcsimrootgeom->GetPMT(i).GetPosition(0);
+        pmt_y[i] = wcsimrootgeom->GetPMT(i).GetPosition(1);
+        pmt_z[i] = wcsimrootgeom->GetPMT(i).GetPosition(2);
     }
+    geoTree->Fill();
+
+    // Write geoTree to Disk
+    TDirectory* tmpDir = gDirectory;
+    outputFile->cd("/Detector");
+    geoTree->Write();
+    geoTree = 0;
+    gDirectory = tmpDir;
 }
 
 void CEvent::Loop(int maxEntry)
@@ -118,25 +141,25 @@ void CEvent::Loop(int maxEntry)
     if (maxEntry == -1) nEvent = wcsimT->GetEntries();
     for (int entry=0; entry<nEvent; entry++) {
         wcsimT->GetEntry(entry);
-        
+
         eventNumber = entry+1;
-        nTrigger = rawEvent->GetNumberOfEvents();
-        nTrack = 0;
-        nPMT = 0;
-        nHit = 0;
-        
+        nTrigger    = rawEvent->GetNumberOfEvents();
+        nTrack      = 0;
+        nPMT        = 0;
+        nHit        = 0;
+
         for (int trigIdx=0; trigIdx<nTrigger; trigIdx++) {
             WCSimRootTrigger *rawTrigger = rawEvent->GetTrigger(trigIdx);
-            
+
             ProcessTracks(rawTrigger, nTrack);
             nTrack += rawTrigger->GetNtrack();
-            
+
             // raw hits info are all in the first trigger. (what??)
             if (trigIdx!=0) continue;
             ProcessHits(rawTrigger, nHit);
             nPMT += rawTrigger->GetNcherenkovhits();
         }
-        
+
         DetermineDecayMode();
         // if (mode<10)
             PrintInfo();
@@ -149,21 +172,21 @@ void CEvent::ProcessTracks(WCSimRootTrigger* trigger, int currentTracks)
 {
     int ntrack = trigger->GetNtrack();
     // cout << ntrack << endl;
-    
+
     for (int i=0; i<ntrack; i++) {
         WCSimRootTrack* track = (WCSimRootTrack*)trigger->GetTracks()->At(i);
         int idx = i+currentTracks;
-        track_pdg[idx] = track->GetIpnu();
+        track_pdg[idx]    = track->GetIpnu();
         track_parent[idx] = track->GetParenttype();
-        track_t[idx] = track->GetTime();
-        track_ee[idx] = track->GetE();
-        track_e[idx] = track->GetE() - track->GetM();
-        track_x[idx] = track->GetStart(0);
-        track_y[idx] = track->GetStart(1);
-        track_z[idx] = track->GetStart(2);
-        track_dx[idx] = track->GetDir(0);
-        track_dy[idx] = track->GetDir(1);
-        track_dz[idx] = track->GetDir(2);
+        track_t[idx]      = track->GetTime();
+        track_ee[idx]     = track->GetE();
+        track_e[idx]      = track->GetE() - track->GetM();
+        track_x[idx]      = track->GetStart(0);
+        track_y[idx]      = track->GetStart(1);
+        track_z[idx]      = track->GetStart(2);
+        track_dx[idx]     = track->GetDir(0);
+        track_dy[idx]     = track->GetDir(1);
+        track_dz[idx]     = track->GetDir(2);
     }
 }
 
@@ -183,7 +206,7 @@ void CEvent::ProcessHits(WCSimRootTrigger* trigger, int currentHits)
             hit_wl[idx] = hittime->GetWavelength();
             hit_pmtID[idx] = hit->GetTubeID()-1;
             hit_tc[idx] = VertexCorrectedTime(idx);
-            
+
             nHit++;
         }
     }
@@ -191,13 +214,13 @@ void CEvent::ProcessHits(WCSimRootTrigger* trigger, int currentHits)
 }
 
 float CEvent::VertexCorrectedTime(int idx)
-{   
+{
     // assuming we can reconstruct the vertex ...
-    int tubeIdx = hit_pmtID[idx];
-    float tube_x = pmt_pos[tubeIdx][0];
-    float tube_y = pmt_pos[tubeIdx][1];
-    float tube_z = pmt_pos[tubeIdx][2];
-    
+    int tubeIdx  = hit_pmtID[idx];
+    float tube_x = pmt_x[tubeIdx];
+    float tube_y = pmt_y[tubeIdx];
+    float tube_z = pmt_z[tubeIdx];
+
     TVector3 vtx3(track_x[2], track_y[2], track_z[2]);
     TVector3 hit3(tube_x, tube_y, tube_z);
     float rindex = 1.3492;
@@ -228,6 +251,7 @@ void CEvent::DetermineDecayMode()
         }
         else if (nTrack == 15) {
             if (track_pdg[3] == 111 && track_pdg[4] == 111 && track_pdg[9] == 211) { mode = 61; }
+            if (track_pdg[3] == 211 && track_pdg[4] == 111 && track_pdg[5] == 111) { mode = 61; }
             else { mode = 4; } // unknown 15 tracks
         }
         else if (nTrack == 16) {
@@ -243,26 +267,26 @@ void CEvent::DetermineDecayMode()
         else {
             mode = 0; // unknown K+ decay
         }
-    } 
+    }
 }
 
 void CEvent::PrintInfo()
 {
     cout << "=================================\n";
-    cout << "#" << eventNumber << ": nTrigger: " << nTrigger 
-         << " | nTrack: "<< nTrack 
-         << " | nPMT: "<< nPMT 
-         << " | nHit: "<< nHit 
+    cout << "#" << eventNumber << ": nTrigger: " << nTrigger
+         << " | nTrack: "<< nTrack
+         << " | nPMT: "<< nPMT
+         << " | nHit: "<< nHit
          << "\n\tDecay Mode " << mode << ": " << decayMode[mode]
          << "\n";
     for (int i=2; i<nTrack; i++) {
-         cout << "\tPDG: " << track_pdg[i] 
+         cout << "\tPDG: " << track_pdg[i]
              << " | Parent: " << track_parent[i]
              << " | Time: " << track_t[i]
              << " | KE: " << track_e[i]
              << " | E: " << track_ee[i]
-             << " | Vtx: (" << track_x[i] << ", " << track_y[i] << ", " << track_z[i] << ")" 
-             << " | Dir: (" << track_dx[i] << ", " << track_dy[i] << ", " << track_dz[i] << ")" 
+             << " | Vtx: (" << track_x[i] << ", " << track_y[i] << ", " << track_z[i] << ")"
+             << " | Dir: (" << track_dx[i] << ", " << track_dy[i] << ", " << track_dz[i] << ")"
              << "\n";
     }
     cout << endl;

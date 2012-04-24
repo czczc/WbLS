@@ -1,4 +1,4 @@
-# Visualization and setup macro 
+# Visualization and setup macro
 # This file is run by default if you just type WCSim and nothing else.
 
 /run/verbose 0
@@ -33,13 +33,13 @@
 # 1. Stacking only mean when the photon is generated
 # the QE is applied to reduce the total number of photons
 # 2. Stacking and sensitivity detector
-# In the stacking part, the maximum QE is applied to reduce 
+# In the stacking part, the maximum QE is applied to reduce
 # the total number of photons
 # On the detector side, the rest of QE are applied according to QE/QE_max
 # distribution. This option is in particular important for the WLS
 # 3. The last option means all the QE are applied at the detector
-# Good for the low energy running. 
-#/WCSim/PMTQEMethod     Stacking_Only 
+# Good for the low energy running.
+#/WCSim/PMTQEMethod     Stacking_Only
 #/WCSim/PMTQEMethod     Stacking_And_SensitiveDetector
 /WCSim/PMTQEMethod     SensitiveDetector_Only
 
@@ -53,7 +53,7 @@
 # # /vis/viewer/set/viewpointThetaPhi 45 45 deg
 # /vis/viewer/set/viewpointThetaPhi 120 90 deg
 
-#/vis/open RayTracer 
+#/vis/open RayTracer
 #/vis/viewer/set/upVector 0 0 1
 #/vis/rayTracer/eyePosition 70 0 70
 #/vis/rayTracer/trace
@@ -76,8 +76,8 @@
 /gun/particle kaon+
 #/gun/particle pi0
 /gun/energy 105 MeV
-/gun/direction 0 1 0 
-/gun/position 0 0 0  
+/gun/direction 0 1 0
+/gun/position 0 0 0
 
 /WCSim/ConstructWLS false
 /WCSim/ConstructWLSP false
@@ -110,7 +110,7 @@
 
 
 ## change the name of the output root file, default = wcsim.root
-/WCSimIO/RootFile wcsim100.root
+/WCSimIO/RootFile wcsim100_py270.root
 /WCSim/random/seed 200
 /run/beamOn 100
 #exit
