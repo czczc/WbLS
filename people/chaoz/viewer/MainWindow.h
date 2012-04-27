@@ -19,21 +19,21 @@ enum EMenuIds {
 class MainWindow: public TGMainFrame
 {
 public:
-	MainWindow(const TGWindow *p, int w,int h);
-	virtual ~MainWindow();
+    MainWindow(const TGWindow *p, int w,int h);
+    virtual ~MainWindow();
 
-	void HandleMenu(int id);
+    void HandleMenu(int id);
 
 private:
-	TGHorizontalFrame *fViewAndControlFrame;
-	ViewWindow        *fViewWindow;
-	ControlWindow     *fControlWindow;
-	TGMenuBar         *fMenuBar;
-	TGPopupMenu       *fMenuFile;
-	TGLayoutHints     *fMenuBarItemLayout;
-	void InitMenu();
+    TGHorizontalFrame *fViewAndControlFrame;
+    ViewWindow        *fViewWindow;
+    ControlWindow     *fControlWindow;
+    TGMenuBar         *fMenuBar;
+    TGPopupMenu       *fMenuFile;
+    TGLayoutHints     *fMenuBarItemLayout;
+    void InitMenu();
 
-	void CleanUp();
+    void CleanUp();
 
    ClassDef(MainWindow, 0)
 };

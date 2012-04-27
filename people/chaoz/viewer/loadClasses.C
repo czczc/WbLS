@@ -1,5 +1,5 @@
 {
-	TString prefix = ".";
+    TString prefix = ".";
     TString include = ".include ";
     TString load = ".L ";
 

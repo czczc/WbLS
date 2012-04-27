@@ -72,10 +72,11 @@
 
 # Or you can use the G4 Particle Gun
 /mygen/generator normal
-# /gun/particle muon-
-/gun/particle kaon+
+/gun/particle mu+
+/gun/energy 150 MeV
+# /gun/particle kaon+
 #/gun/particle pi0
-/gun/energy 105 MeV
+# /gun/energy 105 MeV
 /gun/direction 0 1 0
 /gun/position 0 0 0
 
@@ -110,7 +111,7 @@
 
 
 ## change the name of the output root file, default = wcsim.root
-/WCSimIO/RootFile wcsim100_py270.root
+/WCSimIO/RootFile muon_150MeV_py90.root
 /WCSim/random/seed 200
 /run/beamOn 100
 #exit
