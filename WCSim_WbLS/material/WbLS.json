@@ -157,7 +157,7 @@
   "YIELDRATIO": {"value": 0.26},
   "FASTCOMPONENT": {"x": "PPO_ENERGY", "y": "PPO_EMISSION"},
   "SLOWCOMPONENT": {"x": "PPO_ENERGY", "y": "PPO_EMISSION"},
-  "BIRKSCONSTANT": {"vaulue": 0.124, "unit": "mm/MeV"},
+  "BIRKSCONSTANT": {"value": 0.124, "unit": "mm/MeV"},
 
   "WLSCOMPONENT": {"x": "PPO_ENERGY", "y": "PPO_EMISSION"},
   "WLSABSLENGTH": {"x": "Water_ENERGY", "y": "PPO_ABSLENGTH"},
