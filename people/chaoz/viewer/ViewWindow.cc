@@ -15,6 +15,7 @@
 #include "TMath.h"
 #include "TMarker.h"
 #include "TColor.h"
+#include "TGraph.h"
 
 #include <iostream>
 using namespace std;
@@ -24,6 +25,7 @@ ViewWindow::ViewWindow(const TGWindow *p, int w,int h)
     :TRootEmbeddedCanvas("ECanvas", p, w, h)
 {
     currentEvent = 0;
+    vRing = 0;
     InitCuts();
     InitStyle();
     InitHist();
@@ -50,6 +52,7 @@ void ViewWindow::InitCuts()
 void ViewWindow::InitHist()
 {
     fEvent = new MCEvent("data/events100_py90.root");
+    SetCurrentEvent(0);
 
     float radius = fEvent->cylRadius;
     float halfX = fEvent->cylRadius * TMath::Pi();
@@ -96,16 +99,16 @@ void ViewWindow::UpdatePMTMap()
         pmtMarker[i]->SetMarkerSize(0);
     }
     fEvent->GetEntry(currentEvent);
+    int npe = 0;
     for (int i=0; i<fEvent->nHit; i++) {
         if (fEvent->hit_tc[i]>cuts.tc_min && fEvent->hit_tc[i]<cuts.tc_max) {
             UpdatePMT(fEvent->hit_pmtID[i]);
+            npe++;
         }
     }
+    cout << "PE:" << npe << " | total PE: " << hHitTime->GetEntries() << endl;
     fTopPanel->Update();
     UpdateCanvas();
-    // fBotPanel->cd();
-    // fTopPanel->Update();
-
 }
 
 void ViewWindow::UpdatePMT(int id)
@@ -179,9 +182,26 @@ void ViewWindow::UpdateHitTime()
     fBotPanel->cd();
     fEvent->Tree()->Draw("hit_tc>>hHitTime", selection);
     hHitTime->GetXaxis()->SetRangeUser(cuts.tc_min, cuts.tc_max);
-    fEvent->GetEntry(currentEvent);
+    // fEvent->GetEntry(currentEvent);
     hContainer->SetTitle(fEvent->decayMode[fEvent->mode].c_str());
     fBotPanel->Update();
+}
+
+void ViewWindow::SetCurrentEvent(int eventNo)
+{
+    currentEvent = eventNo;
+    fEvent->GetEntry(currentEvent);
+    // fEvent->PrintInfo();
+    int nTrack = fEvent->nTrack;
+    nVisTrack = 0;
+    for (int i = 2; i < nTrack; i++) {
+        int pdg = fEvent->track_pdg[i];
+        int abs_pdg = TMath::Abs(pdg);
+        // TString name;
+        if ( abs_pdg == 14 || abs_pdg == 12) continue; // nu_mu or nu_e
+        visTrackID[nVisTrack] = i;
+        nVisTrack++;
+    }
 }
 
 void ViewWindow::InitStyle()
@@ -200,23 +220,55 @@ void ViewWindow::InitStyle()
     gStyle->SetMarkerSize(0.3);
     gROOT->ForceStyle();
     // Sim->UseCurrentStyle();
-
 }
 
 void ViewWindow::UpdateCanvas()
 {
-    // Canvas()->cd();
     fBotPanel->cd();
+}
 
-    // fTopPanel->cd();
-    // fTopPanel->Update();
-    // fBotPanel->cd();
-    // fBotPanel->Update();
-    // Canvas()->Modified();
-    // fBotPanel->Modified();
+void ViewWindow::DrawTrack(int listID)
+{
+    ClearVirtualRing();
+    int track_id = visTrackID[listID-1];
+    int resolution = 200;
+    // cout << "track #" << track_id << endl;
+    vector< vector<float> > vertice = fEvent->FindRing(track_id, resolution);
+    if (vertice.size() == 0) { return; }
+    // fEvent->PrintInfo();
+    vRing = new TGraph(resolution);
+    float radius = fEvent->cylRadius;
+    float halfY = fEvent->cylLength / 2;
+    for (int i=0; i<resolution; i++) {
+        float x = vertice[i][0];
+        float y = vertice[i][1];
+        float x_ = -TMath::ATan2(y, x) * radius;
+        float y_ = vertice[i][2];;
+        if ( y_ > halfY - 0.01 ) {
+            x_ = -y;
+            y_ = -x + halfY + radius;
+        }
+        else if (y_ < -(halfY - 0.01)) {
+            x_ = -y;
+            y_ = x - halfY - radius;
+        }
+        vRing->SetPoint(i, x_, y_);
+    }
+    fTopPanel->cd();
+    vRing->Draw("P");
+    vRing->SetMarkerColor(kBlue);
+    vRing->SetMarkerStyle(20);
+    vRing->SetMarkerSize(0.6); 
+    fTopPanel->Update();
+}
 
-    // Canvas()->Update();
-    // gPad->cd(0);
+void ViewWindow::ClearVirtualRing() 
+{ 
+    if (vRing) {
+        delete vRing; 
+        vRing = 0; 
+        fTopPanel->Update();
+    } 
 }
 
 ViewWindow::~ViewWindow(){}

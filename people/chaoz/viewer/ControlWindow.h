@@ -6,6 +6,7 @@
 class TGTextButton;
 class ViewWindow;
 class TGNumberEntryField;
+class TGListBox;
 
 class ControlWindow: public TGVerticalFrame
 {
@@ -19,14 +20,18 @@ public:
     void Jump();
     void VisualCut();
 
-    void UpdateHitTimePanel();
     void UpdateAll();
 
 private:
     ViewWindow        *view;
     TGHorizontalFrame *fNavigationFrame;
-    TGTextButton      *prev, *next;
+    TGTextButton      *prev, *next, *clear;
     TGNumberEntryField       *eventEntry;
+
+    TGGroupFrame      *fTracksFrame;
+    TGListBox         *fTracksListBox;
+    void InitTrackListBox();
+    void UpdateTrackListBox();
 
     ClassDef(ControlWindow, 0)
 };

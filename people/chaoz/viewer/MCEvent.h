@@ -63,6 +63,8 @@ public:
     TTree* Tree() { return simTree; }
     void GetEntry(int i) { simTree->GetEntry(i); }
     void PrintInfo();
+    std::vector< std::vector<float> > FindRing(int track_id, int resolution = 200);
+    std::vector<float> ProjectToTankSurface_C(float *vtx, float *dir);
 
 private:
     void InitBranchAddress();

@@ -12,6 +12,7 @@ class TEllipse;
 class TPad;
 class TH1F;
 class TMarker;
+class TGraph;
 
 class ViewWindow: public TRootEmbeddedCanvas
 {
@@ -32,7 +33,7 @@ public:
     TCanvas* Canvas() { return GetCanvas(); };
     TPad* TopPanel() { return fTopPanel; }
     TPad* BotPanel() { return fBotPanel; }
-    void SetCurrentEvent(int eventNo) { currentEvent = eventNo; }
+    void SetCurrentEvent(int eventNo);
     void Open(const char* fileName);
 
     void UpdateHitTime();
@@ -40,6 +41,8 @@ public:
     void UpdatePMTMap();
     void UpdateCanvas();
 
+    void DrawTrack(int listID);
+    void ClearVirtualRing();
     int currentEvent;
     MCEvent *fEvent;
 
@@ -48,7 +51,11 @@ public:
     TEllipse *WCTop, *WCBottom;
     TH1F *hHitTime;
     TMarker* pmtMarker[MAXPMT];
+    TGraph *vRing;
+
     int pmtPE[MAXPMT];
+    int nVisTrack;
+    int visTrackID[MAXTRACK];
 
 private:
     TPad *fBotPanel;
