@@ -242,17 +242,24 @@ void CEvent::DetermineDecayMode()
             else { mode = 1; } // unknown 8 tracks
         }
         else if (nTrack == 11) {
-            if (track_pdg[3] == 111 && track_pdg[4] == 14 && track_pdg[7] == -13) { mode = 51; }
+            if (track_pdg[3] == 111 && track_pdg[4] == 14) { mode = 51; }
             else { mode = 2; } // unknown 11 tracks
         }
         else if (nTrack == 12) {
             if (track_pdg[3] == 111 && track_pdg[6] == 211) { mode = 21; }
             else { mode = 3; } // unknown 12 tracks
         }
+        else if (nTrack == 13) {
+            mode = 22; // pi0 decays to e+e-gamma
+        }
+        else if (nTrack == 10) {
+            mode = 23; // pi+ changes to pi0??
+        }
         else if (nTrack == 15) {
-            if (track_pdg[3] == 111 && track_pdg[4] == 111 && track_pdg[9] == 211) { mode = 61; }
-            if (track_pdg[3] == 211 && track_pdg[4] == 111 && track_pdg[5] == 111) { mode = 61; }
-            else { mode = 4; } // unknown 15 tracks
+            mode = 61;
+            // if (track_pdg[3] == 111 && track_pdg[4] == 111 && track_pdg[9] == 211) { mode = 61; }
+            // if (track_pdg[3] == 211 && track_pdg[4] == 111 && track_pdg[5] == 111) { mode = 61; }
+            // else { mode = 4; } // unknown 15 tracks
         }
         else if (nTrack == 16) {
             int pi_plus = 0;
