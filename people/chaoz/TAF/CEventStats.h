@@ -18,7 +18,7 @@ public:
     TFile *outputFile;
     TTree *outputTree;
     
-    map<int, string> decayMode;
+    std::map<int, std::string> decayMode;
 
     enum State {
         MAXTRACK = 100,
@@ -66,6 +66,19 @@ public:
     float ch1_michele_e;
     float ch1_kaon_npe; // with clean time separation
     float ch1_muon_npe; // with clean time separation
+    float ch1_muon_npe_recon; // with clean time separation
+    // float ch1_prompt_npe; // within 100 ns
+    // float ch1_rising_dt; // rising time of the hittime shape
+    // float ch1_early_charge_ratio; // early charge / all charge (in the first 100ns)
+    
+    float prompt_npe; // within 100 ns
+    float rising_dt; // rising time of the hittime shape
+    float rising_dt_vis; // rising time of the hittime shape, adding smear
+    float early_charge_ratio; // early charge / all charge (in the first 100ns)
+    
+    float bg1_muon_e;
+    float bg1_muon_npe_recon;
+    float bg1_michele_t;
     
     CEventStats();
     CEventStats(const char* filename, const char* outname);
@@ -74,13 +87,18 @@ public:
     //  methods
     void Loop(int maxEntry=-1);
     void SaveOutput();
+    void SetDefault();
+    void InspectShape();
+    void InspectVisShape();
     
     TTree* Tree() { return simTree; }
     void GetEntry(int i) { simTree->GetEntry(i); }
     void PrintInfo();
+    void PrintInfo(int i);
     // std::vector< std::vector<float> > FindRing(int track_id, int resolution = 200);
     // std::vector<float> ProjectToTankSurface_C(float *vtx, float *dir);
-
+    float GetRandomMuonPE(float e);
+    
 private:
     void InitBranchAddress();
     void InitDecayMode();

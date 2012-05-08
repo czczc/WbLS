@@ -29,6 +29,7 @@ MCEvent::~MCEvent()
 void MCEvent::InitDecayMode()
 {
     decayMode[0]  = "Unknown??";
+    decayMode[-11] = "Background: Muon";
     decayMode[11] = "K^{+} -> #mu^{+} + #nu_{#mu} (63.47%)";           // 63.47%
     decayMode[21] = "K^{+} -> #pi^{+} + #pi^{0} (21.13%)";             // 21.13%
     decayMode[31] = "K^{+} -> #pi^{+} + #pi^{+} + #pi^{-} (5.58%)";    // 5.58%

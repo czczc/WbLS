@@ -213,6 +213,8 @@ void ViewWindow::InitStyle()
     gStyle->SetTitleBorderSize(0);
     gStyle->SetTitleOffset(1.3, "x");
     gStyle->SetTitleOffset(0.8, "y");
+    gStyle->SetLabelSize(0.05, "x");
+    gStyle->SetLabelSize(0.05, "y");
     gStyle->SetHistLineWidth(2);
     gStyle->SetLegendBorderSize(0);
     gStyle->SetPadLeftMargin(0.08);

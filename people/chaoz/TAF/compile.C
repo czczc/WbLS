@@ -12,11 +12,6 @@
 
 
     gROOT->ProcessLine( load + prefix + "/CEvent.cc+" );
-
-    // CEvent ev("../gen/wcsim100_py90.root", "../viewer/data/events100_py90.root");
-    // CEvent ev("../gen/wcsim100_py180.root", "../viewer/data/events100_py180.root");
-    // CEvent ev("../gen/wcsim100_py270.root", "../viewer/data/events100_py270.root");
-    // CEvent ev("../gen/muon_150MeV_py90.root", "../viewer/data/events_muon_150MeV_py90.root");
-    // ev.Loop();
+    gROOT->ProcessLine( load + prefix + "/CEventStats.cc+" );
 
 }

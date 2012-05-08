@@ -109,9 +109,10 @@
 
 /WCSim/Construct
 
+/geometry/test/grid_test true
 
 ## change the name of the output root file, default = wcsim.root
-/WCSimIO/RootFile muon_150MeV_py90.root
+/WCSimIO/RootFile test.root
 /WCSim/random/seed 200
-/run/beamOn 100
+/run/beamOn 1
 #exit

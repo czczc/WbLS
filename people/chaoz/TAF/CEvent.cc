@@ -234,7 +234,12 @@ void CEvent::Reset()
 void CEvent::DetermineDecayMode()
 {
     if (nTrack <= 2) { mode = -2; } // unphyiscal
-    else if (track_pdg[2] != 321) { mode = -1; } // not K+ primary
+    else if (track_pdg[2] != 321) {  // not K+ primary
+        mode = -1; 
+        if (nTrack == 6) {
+            if (track_pdg[2] == -13) { mode = -11; } // mu+ bg simulation
+        }
+    } 
     else {
         if (nTrack == 8) {
             if (track_pdg[3] == 14 && track_pdg[4] == -13) { mode = 11; }
