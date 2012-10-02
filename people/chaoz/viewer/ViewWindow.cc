@@ -102,7 +102,7 @@ void ViewWindow::UpdatePMTMap()
     int npe = 0;
     for (int i=0; i<fEvent->nHit; i++) {
         if (fEvent->hit_tc[i]>cuts.tc_min && fEvent->hit_tc[i]<cuts.tc_max) {
-            UpdatePMT(fEvent->hit_pmtID[i]);
+            UpdatePMT(fEvent->hit_pmtID[i], fEvent->hit_tc[i]);
             npe++;
         }
     }
@@ -111,13 +111,15 @@ void ViewWindow::UpdatePMTMap()
     UpdateCanvas();
 }
 
-void ViewWindow::UpdatePMT(int id)
+void ViewWindow::UpdatePMT(int id, float tc)
 {
     pmtPE[id]++;
     pmtMarker[id]->SetMarkerSize(0.3 * TMath::Sqrt(pmtPE[id]));
 
     if (pmtPE[id] == 1) { pmtMarker[id]->SetMarkerColor(45); }
     else { pmtMarker[id]->SetMarkerColor(kRed); }
+    
+    if (tc>100) { ; }
     pmtMarker[id]->Draw();
 }
 

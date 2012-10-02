@@ -37,7 +37,7 @@ public:
     void Open(const char* fileName);
 
     void UpdateHitTime();
-    void UpdatePMT(int id);
+    void UpdatePMT(int id, float tc=0);
     void UpdatePMTMap();
     void UpdateCanvas();
 
