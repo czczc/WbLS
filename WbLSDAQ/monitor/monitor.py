@@ -7,11 +7,11 @@ Created by Chao Zhang on 2012-10-03.
 """
 
 import sys, os
-from glob import glob
-
 
 def monitor(dir):
-    files = glob(dir+"/*.root")
+    oldDir = os.getcwd()
+    os.chdir(dir)
+    files = [x for x in os.listdir(dir) if x.endswith('.root')]
     files.sort(key=lambda x: os.stat(x).st_mtime, reverse=True)
     if len(files) > 1:
         newest = files[1]
@@ -19,6 +19,7 @@ def monitor(dir):
         newest = files[0]
     # print newest
     
+    os.chdir(oldDir)
     f = open("lastfile.txt", "r")
     last = f.read().rstrip()
     f.close()
@@ -26,7 +27,7 @@ def monitor(dir):
     
     if last == newest: return
     f = open("lastfile.txt", "w")
-    f.write(newest)
+    f.write(dir+'/'+newest)
     f.close()
     
 if __name__ == '__main__':

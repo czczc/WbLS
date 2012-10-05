@@ -21,5 +21,5 @@ if __name__ == '__main__':
     while True:
         fakeone('~/Projects/LBNE/WbLS/software/WbLSDAQ/data/test/fakedata%d.root' % count)
         count += 1
-        time.sleep(2)
+        time.sleep(1)
 

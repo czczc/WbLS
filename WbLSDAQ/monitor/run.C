@@ -15,16 +15,6 @@
     
     gROOT->ProcessLine(".x Load.C");
     
-    // WblsDaq::Monitor mon;
-    // mon.Run();
-    
     MainWindow *gMainWindow = new MainWindow(gClient->GetRoot(), 500, 300);
-    // for(int i=0; i<100; i++) {
-    //     w->AddOne();
-    //     w->fCanvas()->Modified();
-    //     w->fCanvas()->Update();
-    //     gSystem->ProcessEvents();
-    //     
-    // }
     
 }
