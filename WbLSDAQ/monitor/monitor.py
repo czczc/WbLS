@@ -6,7 +6,7 @@ monitor.py
 Created by Chao Zhang on 2012-10-03.
 """
 
-import sys, os
+import sys, os, time
 
 def monitor(dir):
     oldDir = os.getcwd()
@@ -31,5 +31,6 @@ def monitor(dir):
     f.close()
     
 if __name__ == '__main__':
-    monitor(sys.argv[1])
-
+    while True:
+        monitor(sys.argv[1])
+        time.sleep(1)

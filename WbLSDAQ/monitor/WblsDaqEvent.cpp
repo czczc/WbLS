@@ -4,6 +4,9 @@
 #include <TTree.h>
 #include <TChain.h>
 
+#include <iostream>
+using namespace std;
+
 void WblsDaq::set_branch_address(TTree* tree, WblsDaq::Event* obj)
 {
     tree->SetBranchAddress("EventNumber",&obj->count);
@@ -15,12 +18,36 @@ void WblsDaq::set_branch_address(TTree* tree, WblsDaq::Event* obj)
 }
 void WblsDaq::set_branch_address(TTree* tree, WblsDaq::Header* obj)
 {
+    tree->SetBranchAddress("RunNumber", &obj->run_number);
+    tree->SetBranchAddress("RunStartTime",  &obj->runstart);
+    tree->SetBranchAddress("IsThisDataFile",  &obj->isdata);
+    tree->SetBranchAddress("is12or14bit",  &obj->nbits);
+    tree->SetBranchAddress("frequency",  &obj->freqtype);
+    tree->SetBranchAddress("runtype",  &obj->runtype);
+    tree->SetBranchAddress("sampletype",  &obj->sampletype);
+    tree->SetBranchAddress("Channel0Gain",  &obj->ch0_gain);
+    tree->SetBranchAddress("Channel1Gain",  &obj->ch1_gain);
+    tree->SetBranchAddress("Channel2Gain",  &obj->ch2_gain);
+    tree->SetBranchAddress("Channel3Gain",  &obj->ch3_gain);
+    tree->SetBranchAddress("Channel0device",  &obj->ch0_device);
+    tree->SetBranchAddress("Channel1device",  &obj->ch1_device);
+    tree->SetBranchAddress("Channel2device",  &obj->ch2_device);
+    tree->SetBranchAddress("Channel3device",  &obj->ch3_device);
+    tree->SetBranchAddress("PedestalSubstructedAtRun",  &obj->pedestal);
 }
 void WblsDaq::set_branch_address(TTree* tree, WblsDaq::Footer* obj)
 {
+    tree->SetBranchAddress("TotalEventsNumber",  &obj->nevents);
+    tree->SetBranchAddress("RunStopTime",  &obj->runstop);
+    
 }
 
-
+WblsDaq::Spinner::~Spinner()
+{
+    if (m_event) delete m_event;
+    if (m_head) delete m_head;
+    if (m_foot) delete m_foot;
+}
 
 WblsDaq::Spinner::Spinner(std::string filename)
 {
@@ -101,10 +128,38 @@ WblsDaq::Event* WblsDaq::Spinner::event(int entry)
         
 WblsDaq::Header* WblsDaq::Spinner::header()
 {
+    m_head_tree->GetEntry(0);
     return m_head;
 }
 
 WblsDaq::Footer* WblsDaq::Spinner::footer()
 {
+    m_foot_tree->GetEntry(0);
+    
     return m_foot;
 }
+
+void WblsDaq::Spinner::PrintRunInfo()
+{
+    WblsDaq::Header* h = header();
+    WblsDaq::Footer* f = footer();
+    cout << "run_number:" << h->run_number << endl;
+    cout << "  runstart:" << h->runstart << endl;
+    cout << "    isdata:" << h->isdata << endl;
+    cout << "     nbits:" << h->nbits << endl;
+    cout << "  freqtype:" << h->freqtype << endl;
+    cout << "   runtype:" << h->runtype << endl;
+    cout << "sampletype:" << h->sampletype << endl;
+    cout << "  ch0_gain:" << h->ch0_gain << endl;
+    cout << "  ch1_gain:" << h->ch1_gain << endl;
+    cout << "  ch2_gain:" << h->ch2_gain << endl;
+    cout << "  ch3_gain:" << h->ch3_gain << endl;
+    cout << "ch0_device:" << h->ch0_device << endl;
+    cout << "ch1_device:" << h->ch1_device << endl;
+    cout << "ch2_device:" << h->ch2_device << endl;
+    cout << "ch3_device:" << h->ch3_device << endl;
+    cout << "  pedestal:" << h->pedestal << endl;
+    cout << "   runstop:" << f->runstop << endl;
+    cout << "   nevents:" << f->nevents << endl;
+}
+

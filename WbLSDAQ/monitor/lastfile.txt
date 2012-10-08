@@ -1,1 +1,1 @@
-/Users/chaozhang/Projects/LBNE/WbLS/software/WbLSDAQ/data/test/fakedata155.root
+/Users/chaozhang/Projects/LBNE/WbLS/software/WbLSDAQ/data/test/fakedata392.root

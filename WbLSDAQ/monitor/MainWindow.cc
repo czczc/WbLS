@@ -13,6 +13,8 @@
 #include "TDirectory.h"
 #include "TMath.h"
 #include "TRoot.h"
+#include "TText.h"
+#include "TTimeStamp.h"
 
 #include <iostream>
 #include <fstream>
@@ -22,8 +24,29 @@ MainWindow::MainWindow(const TGWindow *p, int w,int h)
     : TGMainFrame(p, w, h)
 {
     g_nSpills = 0;
+    g_tLastTrigger = -1;
     fTimer = new TTimer(this, 1000);
     fTimer->TurnOn();
+    
+    fText_run_number = new TText(0.3, 0.3, "Unknown");
+    fText_run_number->SetNDC();
+    fText_run_number->SetTextSize(0.1);
+    
+    fText_runtype = new TText(0.3, 0.3, "Unknown");
+    fText_runtype->SetNDC();
+    fText_runtype->SetTextSize(0.1);
+    
+    fText_sampletype = new TText(0.3, 0.3, "Unknown");
+    fText_sampletype->SetNDC();
+    fText_sampletype->SetTextSize(0.1);
+    
+    fText_runstart = new TText(0.3, 0.3, "Unknown");
+    fText_runstart->SetNDC();
+    fText_runstart->SetTextSize(0.1);
+    
+    fText_runstop = new TText(0.3, 0.3, "Unknown");
+    fText_runstop->SetNDC();
+    fText_runstop->SetTextSize(0.1);
     
     // fTimer->SetCommand("gMainWindow->HandleTimer(0)");
     
@@ -32,7 +55,7 @@ MainWindow::MainWindow(const TGWindow *p, int w,int h)
     hCH2 = new TH1F("hCH2", "Counter 1", WblsDaq::NFADCBins, 0, WblsDaq::NFADCBins);
     hCH3 = new TH1F("hCH3", "Counter 2", WblsDaq::NFADCBins, 0, WblsDaq::NFADCBins);
     
-    hChargeTub1 = new TH1F("hChargeTub1", "Charge of Tub 1", 100, 1, 7);
+    hChargeTub1 = new TH1F("hChargeTub1", "Charge of Tub 1", 100, -1, 7);
     hChargeTub2 = new TH1F("hChargeTub2", "Charge of Tub 2", 100, 1, 7);
     hChargeCounter1Pulse1 = new TH1F("hChargeCounter1Pulse1", "Charge of Counter 1", 100, 1, 7);
     hChargeCounter1Pulse2 = new TH1F("hChargeCounter1Pulse2", "Charge of Counter 1", 100, 1, 7);
@@ -45,6 +68,8 @@ MainWindow::MainWindow(const TGWindow *p, int w,int h)
     hTDCCounter1Pulse2 = new TH1F("hTDCCounter1Pulse2", "", WblsDaq::NFADCBins, 0, WblsDaq::NFADCBins);;
     hTDCCounter2Pulse1 = new TH1F("hTDCCounter2Pulse1", "", WblsDaq::NFADCBins, 0, WblsDaq::NFADCBins);;
     hTDCCounter2Pulse2 = new TH1F("hTDCCounter2Pulse2", "", WblsDaq::NFADCBins, 0, WblsDaq::NFADCBins);;
+    
+    hDtTriggers = new TH1F("hDtTriggers", "Time Between Triggers", 100, -4, 2);
     InitSpillTree();
     
     r_meanCharge_Tub = 80000.;
@@ -52,10 +77,10 @@ MainWindow::MainWindow(const TGWindow *p, int w,int h)
     r_meanCharge_Counter2 = 500000.;
     
     fTempCanvas = new TCanvas("tempC", "tempC", 100, 100);
-    fEcanvas = new TRootEmbeddedCanvas("Ecanvas", this, 1200, 800);
+    fEcanvas = new TRootEmbeddedCanvas("Ecanvas", this, 1500, 800);
     AddFrame(fEcanvas, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 2, 2, 2, 2));
     fCanvas = fEcanvas->GetCanvas();
-    fCanvas->Divide(4, 3);
+    fCanvas->Divide(5, 3);
     
     // initialize window
     fLastFile = GetLastFile();
@@ -84,6 +109,21 @@ MainWindow::~MainWindow()
     delete hCH2;
     delete hCH3;
     
+    delete hChargeTub1;
+    delete hChargeTub2;
+    delete hChargeCounter1Pulse1;
+    delete hChargeCounter1Pulse2;
+    delete hChargeCounter2Pulse1;
+    delete hChargeCounter2Pulse2;
+
+    delete hTDCTub1;
+    delete hTDCTub2;
+    delete hTDCCounter1Pulse1;
+    delete hTDCCounter1Pulse2;
+    delete hTDCCounter2Pulse1;
+    delete hTDCCounter2Pulse2;
+    
+    delete hDtTriggers;
 }
 
 void MainWindow::InitSpillTree()
@@ -147,13 +187,14 @@ void MainWindow::SetProperties()
     hTDCCounter2Pulse1->SetLineColor(kRed); 
     hTDCCounter2Pulse2->SetLineColor(kBlue); 
     
+    hDtTriggers->GetXaxis()->SetTitle("log_{10}(#DeltaT_{triggers})");
     
     for (int i=1; i!=5; i++) {
         fCanvas->cd(i);
         gPad->SetGridx();
         gPad->SetGridy();
     }
-    for (int i=10; i!=13; i++) {
+    for (int i=11; i!=14; i++) {
         fCanvas->cd(i);
         gPad->SetGridy();
     }
@@ -203,12 +244,28 @@ int MainWindow::LoadLastSpill()
     WblsDaq::Spinner spinner(fLastFile);
     s_nTriggers = spinner.entries();
     cout << fLastFile << ": entries: " << s_nTriggers << endl;
+    // spinner.PrintRunInfo();
+    WblsDaq::Header* f_header = spinner.header();
+    WblsDaq::Footer* f_footer = spinner.footer();
+    f_run_number = f_header->run_number;
+    f_runtype = f_header->runtype;
+    f_sampletype = f_header->sampletype;
+    f_runstart = f_header->runstart;
+    f_runstop = f_footer->runstop;
     
     for (int i=0; i < s_nTriggers; ++i) {
         WblsDaq::Event* evt = spinner.event(i);    
         if (!evt) {
             cerr << "Failed to get event at entry #" << i << endl;
             return 2;
+        }
+        
+        if (g_tLastTrigger<0) {
+            g_tLastTrigger = evt->time;
+        }
+        else {
+            hDtTriggers->Fill(evt->time - g_tLastTrigger);
+            g_tLastTrigger = evt->time;
         }
         for (unsigned bin=0; bin<WblsDaq::NFADCBins; ++bin) {
             hCH0->SetBinContent(bin, evt->ch0[bin] + hCH0->GetBinContent(bin));
@@ -262,6 +319,7 @@ int MainWindow::Update()
     string lastfile = GetLastFile();
     if (lastfile == fLastFile) {
         // nothing to Update
+        // cout << "nothing to update: " << lastfile << endl;
         return 0;
     }
     fLastFile = lastfile;
@@ -274,11 +332,15 @@ int MainWindow::Update()
 
 string MainWindow::GetLastFile()
 {
-    system("python monitor.py /Users/chaozhang/Projects/LBNE/WbLS/software/WbLSDAQ/data/test");
+    // system("python monitor.py /Users/chaozhang/Projects/LBNE/WbLS/software/WbLSDAQ/data/test");
     ifstream in("lastfile.txt");
     string lastfile;
     in >> lastfile;
     in.close();
+    if (lastfile == "") {
+        lastfile = fLastFile;
+        cout << "wait for next updating" << endl;
+    }
     return lastfile;
 }
 
@@ -320,24 +382,41 @@ int MainWindow::DoDraw()
     hTDCCounter2Pulse2->Draw("same");
     
     fCanvas->cd(5);
-    hChargeTub1->Draw();
+    TString s = Form("Run Number: %i", f_run_number);
+    fText_run_number->SetText(0.02, 0.8, s.Data());
+    fText_run_number->Draw();
+    TTimeStamp ts(f_runstart);
+    fText_runstart->SetText(0.02, 0.6, ts.AsString("s"));
+    fText_runstart->Draw();    
+    s.Form("Run Type: %i", f_runtype);
+    fText_runtype->SetText(0.02, 0.4, s.Data());
+    fText_runtype->Draw();
+    s.Form("Sample Type: %i", f_sampletype);
+    fText_sampletype->SetText(0.02, 0.2, s.Data());
+    fText_sampletype->Draw();
     
     fCanvas->cd(6);
-    hChargeTub2->Draw();
+    hChargeTub1->Draw();
     
     fCanvas->cd(7);
+    hChargeTub2->Draw();
+    
+    fCanvas->cd(8);
     hChargeCounter1Pulse1->Draw();
     hChargeCounter1Pulse2->Draw("same");
     
-    fCanvas->cd(8);
+    fCanvas->cd(9);
     hChargeCounter2Pulse1->Draw();
     hChargeCounter2Pulse2->Draw("same");
+    
+    fCanvas->cd(10);
+    hDtTriggers->Draw();
         
     fTempCanvas->cd();
     TH2F *h_nTriggers = (TH2F*)gDirectory->Get("h_nTriggers");
     if (h_nTriggers) delete h_nTriggers;
     fSpillTree->Draw("nTriggers:Entry$>>h_nTriggers");
-    fCanvas->cd(9);
+    fCanvas->cd(11);
     h_nTriggers = (TH2F*)gDirectory->Get("h_nTriggers");
     h_nTriggers->GetXaxis()->SetTitle("Spill #");
     h_nTriggers->SetTitle("Number of Triggers");
@@ -350,7 +429,7 @@ int MainWindow::DoDraw()
     if (h_meanCharge_Tub2) delete h_meanCharge_Tub2;
     fSpillTree->Draw("meanCharge_Tub1:Entry$>>h_meanCharge_Tub1");
     fSpillTree->Draw("meanCharge_Tub2:Entry$>>h_meanCharge_Tub2");
-    fCanvas->cd(10);
+    fCanvas->cd(12);
     TH2F *htemp = (TH2F*)gDirectory->Get("htemp");
     if (htemp) delete htemp;
     h_meanCharge_Tub1 = (TH2F*)gDirectory->Get("h_meanCharge_Tub1");
@@ -373,7 +452,7 @@ int MainWindow::DoDraw()
     if (h_meanCharge_Counter1Pulse2) delete h_meanCharge_Counter1Pulse2;
     fSpillTree->Draw("meanCharge_Counter1Pulse1:Entry$>>h_meanCharge_Counter1Pulse1");
     fSpillTree->Draw("meanCharge_Counter1Pulse2:Entry$>>h_meanCharge_Counter1Pulse2");
-    fCanvas->cd(11);
+    fCanvas->cd(13);
     TH2F *htemp2 = (TH2F*)gDirectory->Get("htemp2");
     if (htemp2) delete htemp2;
     h_meanCharge_Counter1Pulse1 = (TH2F*)gDirectory->Get("h_meanCharge_Counter1Pulse1");
@@ -396,7 +475,7 @@ int MainWindow::DoDraw()
     if (h_meanCharge_Counter2Pulse2) delete h_meanCharge_Counter2Pulse2;
     fSpillTree->Draw("meanCharge_Counter2Pulse1:Entry$>>h_meanCharge_Counter2Pulse1");
     fSpillTree->Draw("meanCharge_Counter2Pulse2:Entry$>>h_meanCharge_Counter2Pulse2");
-    fCanvas->cd(12);
+    fCanvas->cd(14);
     TH2F *htemp3 = (TH2F*)gDirectory->Get("htemp3");
     if (htemp3) delete htemp3;
     h_meanCharge_Counter2Pulse1 = (TH2F*)gDirectory->Get("h_meanCharge_Counter2Pulse1");

@@ -72,7 +72,8 @@ namespace WblsDaq {
     
     struct Header {
         int run_number;         // the run number
-        time_t runstart;        // absolute time of run start
+        // time_t runstart;        // absolute time of run start
+        Long64_t runstart;        // absolute time of run start
         bool isdata;            // true if data, false if MC
         int nbits;              // bits per digitization (12 or 14)
         int freqtype;           // FADC digitization frequency setting
@@ -91,7 +92,7 @@ namespace WblsDaq {
 
     struct Footer {
         int nevents;
-        time_t runstop;
+        Long64_t runstop;
     };
 
     // Tell the tree to use the object's address space
@@ -113,6 +114,8 @@ namespace WblsDaq {
         // Create a spinner on a list of files
         Spinner(const std::vector<std::string>& filenames);
         
+        ~Spinner();
+        
         // Return number of entries
         int entries();
 
@@ -130,6 +133,8 @@ namespace WblsDaq {
         TTree* event_tree() { return m_event_tree; }
         TTree* header_tree() { return m_head_tree; }
         TTree* footer_tree() { return m_foot_tree; }
+        
+        void PrintRunInfo();
     };
 
 } // namespace WblsDaq

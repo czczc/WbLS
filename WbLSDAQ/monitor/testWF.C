@@ -1,7 +1,9 @@
 {
     gROOT->ProcessLine(".x Load.C");
     
-    WblsDaq::Spinner spinner("/Users/chaozhang/Projects/LBNE/WbLS/software/WbLSDAQ/data/test/example.root");
+        // WblsDaq::Spinner spinner("/Users/chaozhang/Projects/LBNE/WbLS/software/WbLSDAQ/data/test/example.root");
+    WblsDaq::Spinner spinner("/Users/chaozhang/Projects/LBNE/WbLS/software/WbLSDAQ/data/test/fakedata118.root");
+    spinner.PrintRunInfo();
     for (int i=0; i<1; ++i) {
         // int nbytes = spinner.load(i);
         WblsDaq::Event* evt = spinner.event(i);    
