@@ -7,8 +7,11 @@ Created by Chao Zhang on 2012-10-03.
 """
 
 import sys, os, time
+from random import choice
 
 def monitor(dir):
+    random = False;
+    # random = True;
     oldDir = os.getcwd()
     os.chdir(dir)
     files = [x for x in os.listdir(dir) if x.endswith('.root')]
@@ -16,8 +19,11 @@ def monitor(dir):
     if len(files) > 1:
         newest = files[1]
     else:
-        newest = files[0]
+        # newest = files[0]
+        return
     # print newest
+    if random:
+        newest = choice(files)
     
     os.chdir(oldDir)
     f = open("lastfile.txt", "r")

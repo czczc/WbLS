@@ -20,7 +20,7 @@ WFAnalyzer::~WFAnalyzer()
 void WFAnalyzer::Process()
 {
     ProcessTub(1);
-    ProcessTub(2);
+    // ProcessTub(2);
     ProcessCounter(1);
     ProcessCounter(2);
 }
@@ -100,8 +100,8 @@ void WFAnalyzer::ProcessTub(int tubNo)
      
     // draw trace
     // TCanvas *c1 = new TCanvas();
-    // TGraph *g = new TGraph(WblsDaq::NFADCBins, xPoints, cleanTrace);
-    // g->Draw("AL");
+    TGraph *g = new TGraph(WblsDaq::NFADCBins, xPoints, cleanTrace);
+    g->Draw("AL");
 }
 
 void WFAnalyzer::ProcessCounter(int counterNo)

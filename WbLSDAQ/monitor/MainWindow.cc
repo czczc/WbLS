@@ -25,7 +25,7 @@ MainWindow::MainWindow(const TGWindow *p, int w,int h)
 {
     g_nSpills = 0;
     g_tLastTrigger = -1;
-    fTimer = new TTimer(this, 1000);
+    fTimer = new TTimer(this, 4000);
     fTimer->TurnOn();
     
     fText_run_number = new TText(0.3, 0.3, "Unknown");
@@ -194,7 +194,7 @@ void MainWindow::SetProperties()
         gPad->SetGridx();
         gPad->SetGridy();
     }
-    for (int i=11; i!=14; i++) {
+    for (int i=11; i!=15; i++) {
         fCanvas->cd(i);
         gPad->SetGridy();
     }
@@ -385,7 +385,7 @@ int MainWindow::DoDraw()
     TString s = Form("Run Number: %i", f_run_number);
     fText_run_number->SetText(0.02, 0.8, s.Data());
     fText_run_number->Draw();
-    TTimeStamp ts(f_runstart);
+    TTimeStamp ts(f_runstart-4*3600);
     fText_runstart->SetText(0.02, 0.6, ts.AsString("s"));
     fText_runstart->Draw();    
     s.Form("Run Type: %i", f_runtype);
