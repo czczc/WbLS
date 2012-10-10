@@ -89,12 +89,12 @@ void WFAnalyzer::ProcessTub(int tubNo)
         cout << "warning: no such tub!" << endl;
     }
     
-    // calculate baseline
+    // calculate baseline, the smaller value of average of 200 bins from (100, 300), (300, 500)
     const int NBINS_BASELINE = 200;
     double bl = TMath::Mean(NBINS_BASELINE, trace+100);
-    double bl_tolerance = 4*TMath::RMS(NBINS_BASELINE, trace);
+    double bl_tolerance = 4*TMath::RMS(NBINS_BASELINE, trace+100);
     int nBins_used = NBINS_BASELINE;
-    for (int i=0; i<NBINS_BASELINE; i++) {
+    for (int i=100; i<NBINS_BASELINE+100; i++) {
         // remove points out of 4 sigma
         if (TMath::Abs(trace[i]-bl) > bl_tolerance) {
             bl = (bl*nBins_used - trace[i])/(nBins_used-1);
@@ -102,7 +102,19 @@ void WFAnalyzer::ProcessTub(int tubNo)
             // cout << "removed one bin" << endl;
         }
     }
-    fBaseLine_Tub[tubNo-1] = bl;
+    double bl2 = TMath::Mean(NBINS_BASELINE, trace+100+NBINS_BASELINE);
+    double bl2_tolerance = 4*TMath::RMS(NBINS_BASELINE, trace+100+NBINS_BASELINE);
+    nBins_used = NBINS_BASELINE;
+    for (int i=100+NBINS_BASELINE; i<NBINS_BASELINE+100+NBINS_BASELINE; i++) {
+        // remove points out of 4 sigma
+        if (TMath::Abs(trace[i]-bl2) > bl2_tolerance) {
+            bl2 = (bl2*nBins_used - trace[i])/(nBins_used-1);
+            nBins_used--;
+            // cout << "removed one bin" << endl;
+        }
+    }
+    fBaseLine_Tub[tubNo-1] = bl < bl2 ? bl: bl2;
+    // cout << bl << ", " << bl2 << endl;
 
     // remove baseline, invert to positive trace
     double cleanTrace[WblsDaq::NFADCBins];
@@ -183,12 +195,12 @@ void WFAnalyzer::ProcessCounter(int counterNo)
         cout << "warning: no such counter!" << endl;
     }
     
-    // calculate baseline
+    // calculate baseline, the smaller value of average of 200 bins from (100, 300), (300, 500)
     const int NBINS_BASELINE = 200;
     double bl = TMath::Mean(NBINS_BASELINE, trace+100);
-    double bl_tolerance = 4*TMath::RMS(NBINS_BASELINE, trace);
+    double bl_tolerance = 4*TMath::RMS(NBINS_BASELINE, trace+100);
     int nBins_used = NBINS_BASELINE;
-    for (int i=0; i<NBINS_BASELINE; i++) {
+    for (int i=100; i<NBINS_BASELINE+100; i++) {
         // remove points out of 4 sigma
         if (TMath::Abs(trace[i]-bl) > bl_tolerance) {
             bl = (bl*nBins_used - trace[i])/(nBins_used-1);
@@ -196,7 +208,18 @@ void WFAnalyzer::ProcessCounter(int counterNo)
             // cout << "removed one bin" << endl;
         }
     }
-    fBaseLine_Counter[counterNo-1] = bl;
+    double bl2 = TMath::Mean(NBINS_BASELINE, trace+100+NBINS_BASELINE);
+    double bl2_tolerance = 4*TMath::RMS(NBINS_BASELINE, trace+100+NBINS_BASELINE);
+    nBins_used = NBINS_BASELINE;
+    for (int i=100+NBINS_BASELINE; i<NBINS_BASELINE+100+NBINS_BASELINE; i++) {
+        // remove points out of 4 sigma
+        if (TMath::Abs(trace[i]-bl2) > bl2_tolerance) {
+            bl2 = (bl2*nBins_used - trace[i])/(nBins_used-1);
+            nBins_used--;
+            // cout << "removed one bin" << endl;
+        }
+    }
+    fBaseLine_Tub[counterNo-1] = bl < bl2 ? bl: bl2;
 
     // remove baseline, invert to positive trace
     double cleanTrace[WblsDaq::NFADCBins];
@@ -221,7 +244,7 @@ void WFAnalyzer::ProcessCounter(int counterNo)
             if(cleanTrace[i]<THRESHOLD && cleanTrace[i+1]>THRESHOLD && tdc1<1) tdc1 = i;
             
         }
-        else if(i>=g_tStartCounterPulse[counterNo-1][1] && i<=g_tStartCounterPulse[counterNo-1][1]) {
+        else if(i>=g_tStartCounterPulse[counterNo-1][1] && i<=g_tStopCounterPulse[counterNo-1][1]) {
             charge2 += cleanTrace[i];
             if(cleanTrace[i]<THRESHOLD && cleanTrace[i+1]>THRESHOLD && tdc2<1) tdc2 = i;
             
