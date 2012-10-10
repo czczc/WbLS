@@ -15,6 +15,7 @@
 #include "TRoot.h"
 #include "TText.h"
 #include "TTimeStamp.h"
+#include "TLine.h"
 
 #include <iostream>
 #include <fstream>
@@ -25,6 +26,8 @@ MainWindow::MainWindow(const TGWindow *p, int w,int h)
 {
     g_nSpills = 0;
     g_tLastTrigger = -1;
+    SetFixedRanges();
+    
     fTimer = new TTimer(this, 4000);
     fTimer->TurnOn();
     
@@ -55,7 +58,7 @@ MainWindow::MainWindow(const TGWindow *p, int w,int h)
     hCH2 = new TH1F("hCH2", "Counter 1", WblsDaq::NFADCBins, 0, WblsDaq::NFADCBins);
     hCH3 = new TH1F("hCH3", "Counter 2", WblsDaq::NFADCBins, 0, WblsDaq::NFADCBins);
     
-    hChargeTub1 = new TH1F("hChargeTub1", "Charge of Tub 1", 100, -1, 7);
+    hChargeTub1 = new TH1F("hChargeTub1", "Charge of Tub 1", 100, 1, 7);
     hChargeTub2 = new TH1F("hChargeTub2", "Charge of Tub 2", 100, 1, 7);
     hChargeCounter1Pulse1 = new TH1F("hChargeCounter1Pulse1", "Charge of Counter 1", 100, 1, 7);
     hChargeCounter1Pulse2 = new TH1F("hChargeCounter1Pulse2", "Charge of Counter 1", 100, 1, 7);
@@ -69,12 +72,9 @@ MainWindow::MainWindow(const TGWindow *p, int w,int h)
     hTDCCounter2Pulse1 = new TH1F("hTDCCounter2Pulse1", "", WblsDaq::NFADCBins, 0, WblsDaq::NFADCBins);;
     hTDCCounter2Pulse2 = new TH1F("hTDCCounter2Pulse2", "", WblsDaq::NFADCBins, 0, WblsDaq::NFADCBins);;
     
-    hDtTriggers = new TH1F("hDtTriggers", "Time Between Triggers", 100, -4, 2);
+    hDtTriggers = new TH1F("hDtTriggers", "Time Between Triggers", 100, r_dtTrigger_min, r_dtTrigger_max);
     InitSpillTree();
-    
-    r_meanCharge_Tub = 80000.;
-    r_meanCharge_Counter1 = 100000.;
-    r_meanCharge_Counter2 = 500000.;
+    InitMaps();
     
     fTempCanvas = new TCanvas("tempC", "tempC", 100, 100);
     fEcanvas = new TRootEmbeddedCanvas("Ecanvas", this, 1500, 800);
@@ -87,7 +87,8 @@ MainWindow::MainWindow(const TGWindow *p, int w,int h)
     
     // fLastFile = "../data/test/rootoutputfile409cosmicsWBLS7percent_shortcable_1315V.root";
     LoadLastSpill();
-    FixCHAxisRange();
+    SetDynamicRanges();
+    SetSignalWindow();
     SetProperties();
     DoDraw();
     cout << "Initialized. First File: " << fLastFile << endl;
@@ -138,6 +139,26 @@ void MainWindow::InitSpillTree()
     fSpillTree->Branch("meanCharge_Counter2Pulse2", &s_meanCharge_Counter2Pulse2);
 }
 
+void MainWindow::InitMaps()
+{
+    fRunTypeMap[0] = "Unknown";
+    fRunTypeMap[1] = "Pedestal";
+    fRunTypeMap[2] = "Calibration";
+    fRunTypeMap[3] = "Cosmic";
+    fRunTypeMap[4] = "Stand-alone";
+    fRunTypeMap[5] = "Beam Low";
+    fRunTypeMap[6] = "Beam Medium";
+    fRunTypeMap[7] = "Beam High";
+    
+    fSampleTypeMap[0] = "Error";
+    fSampleTypeMap[1] = "Air";
+    fSampleTypeMap[2] = "Water";
+    fSampleTypeMap[3] = "WbLS 1";
+    fSampleTypeMap[4] = "WbLS 2";
+    fSampleTypeMap[5] = "LS";
+    fSampleTypeMap[6] = "Others";
+}
+
 Bool_t MainWindow::HandleTimer(TTimer *t)
 {
     // Handle timer event and draws function graphics
@@ -150,12 +171,60 @@ Bool_t MainWindow::HandleTimer(TTimer *t)
     return kTRUE;
 }
 
-void MainWindow::FixCHAxisRange()
+void MainWindow::SetFixedRanges()
+{    
+    // display ranges of the waveforms
+    r_CHymin[0] = 2000; r_CHymax[0] = 8300;
+    r_CHymin[1] = 2000; r_CHymax[1] = 8300;
+    r_CHymin[2] = 2000; r_CHymax[2] = 8300;
+    r_CHymin[3] = 2000; r_CHymax[3] = 8300;
+    
+    // scaling for pulsetime count (to show on waveform plot)
+    r_pulsetime_count_scaling = 300;
+    
+    // max mean charge of the pmts to show on the history plot
+    r_meanCharge_Tub = 80000.;
+    r_meanCharge_Counter1 = 100000.;
+    r_meanCharge_Counter2 = 500000.;
+    
+    // display ranges of the log(dT/sec) between triggers
+    r_dtTrigger_min = -4;
+    r_dtTrigger_max = 1;
+}
+
+void MainWindow::SetDynamicRanges()
 {
-    fCHymin[0] = hCH0->GetMinimum(100)*0.8; fCHymax[0] = 8200;
-    fCHymin[1] = hCH1->GetMinimum(100)*0.8; fCHymax[1] = 8200;
-    fCHymin[2] = hCH2->GetMinimum(100)*0.8; fCHymax[2] = 8200;
-    fCHymin[3] = hCH3->GetMinimum(100)*0.8; fCHymax[3] = 8200;
+    // only set on the first spill 
+    if (g_nSpills!=1) { return; }
+    
+    // max mean charge of the pmts to show on the history plot
+    double scaling = 1.5;
+    r_meanCharge_Tub = s_meanCharge_Tub1 > s_meanCharge_Tub2 ? s_meanCharge_Tub1*scaling : s_meanCharge_Tub2*scaling;
+    r_meanCharge_Counter1 = s_meanCharge_Counter1Pulse1 > s_meanCharge_Counter1Pulse2 ? s_meanCharge_Counter1Pulse1*scaling : s_meanCharge_Counter1Pulse2*scaling;
+    r_meanCharge_Counter2 = s_meanCharge_Counter2Pulse1 > s_meanCharge_Counter2Pulse2 ? s_meanCharge_Counter2Pulse1*scaling : s_meanCharge_Counter2Pulse2*scaling;
+    
+    // fCHymin[0] = hCH0->GetMinimum(100)*0.8; fCHymax[0] = 8200;
+    // fCHymin[1] = hCH1->GetMinimum(100)*0.8; fCHymax[1] = 8200;
+    // fCHymin[2] = hCH2->GetMinimum(100)*0.8; fCHymax[2] = 8200;
+    // fCHymin[3] = hCH3->GetMinimum(100)*0.8; fCHymax[3] = 8200;
+    
+}
+
+void MainWindow::SetSignalWindow()
+{
+    for (int i=0; i<=1; i++) {
+        fLine_SigTub[i][0] = new TLine(g_tStartTub[i], r_CHymin[i], g_tStartTub[i], r_CHymax[i]);
+        fLine_SigTub[i][1] = new TLine(g_tStopTub[i], r_CHymin[i], g_tStopTub[i], r_CHymax[i]);
+        // cout << g_tStartTub[i] << ", " << r_CHymax[i]-1000<< ", " <<  g_tStopTub[i]<< ", " <<  r_CHymax[i] << endl;
+        fLine_SigTub[i][0]->SetLineColor(kGreen);
+        fLine_SigTub[i][1]->SetLineColor(kGreen);
+        for (int j=0; j<=1; j++) {
+            fLine_SigCounter[i][j][0] = new TLine(g_tStartCounterPulse[i][j], r_CHymin[i+2], g_tStartCounterPulse[i][j], r_CHymax[i+2]);
+            fLine_SigCounter[i][j][1] = new TLine(g_tStopCounterPulse[i][j], r_CHymin[i+2], g_tStopCounterPulse[i][j], r_CHymax[i+2]);
+            fLine_SigCounter[i][j][0]->SetLineColor(kGreen);
+            fLine_SigCounter[i][j][1]->SetLineColor(kGreen);
+        }
+    }    
     
 }
 
@@ -202,7 +271,7 @@ void MainWindow::SetProperties()
 }
 
 void MainWindow::Reset()
-{
+{    
     for (unsigned bin=0; bin<=WblsDaq::NFADCBins; ++bin) {
         hCH0->SetBinContent(bin, 0);
         hCH1->SetBinContent(bin, 0);
@@ -275,6 +344,18 @@ int MainWindow::LoadLastSpill()
         }
         
         WFAnalyzer wf(evt);
+        // get time window of each signal (same of every spill)
+        if(g_nSpills==1) {
+            for (int m=0; m<=1; m++) {
+                g_tStartTub[m] = wf.g_tStartTub[m];
+                g_tStopTub[m] = wf.g_tStopTub[m];
+                for (int n=0; n<=1; n++) {
+                    g_tStartCounterPulse[m][n] = wf.g_tStartCounterPulse[m][n];
+                    g_tStopCounterPulse[m][n] = wf.g_tStopCounterPulse[m][n];
+                }
+            }
+        }
+        // wf analysis
         wf.Process();
         hChargeTub1->Fill(TMath::Log10(wf.fCharge_Tub[0]));
         hChargeTub2->Fill(TMath::Log10(wf.fCharge_Tub[1]));
@@ -347,39 +428,51 @@ string MainWindow::GetLastFile()
 int MainWindow::DoDraw()
 {
     for (unsigned bin=0; bin<=WblsDaq::NFADCBins; ++bin) {
-        hTDCTub1->SetBinContent(bin, fCHymin[0] + hTDCTub1->GetBinContent(bin)*100);
-        hTDCTub2->SetBinContent(bin, fCHymin[1] + hTDCTub2->GetBinContent(bin)*100);
-        hTDCCounter1Pulse1->SetBinContent(bin, fCHymin[2] + hTDCCounter1Pulse1->GetBinContent(bin)*100);
-        hTDCCounter1Pulse2->SetBinContent(bin, fCHymin[2] + hTDCCounter1Pulse2->GetBinContent(bin)*100);
-        hTDCCounter2Pulse1->SetBinContent(bin, fCHymin[3] + hTDCCounter2Pulse1->GetBinContent(bin)*100);
-        hTDCCounter2Pulse2->SetBinContent(bin, fCHymin[3] + hTDCCounter2Pulse2->GetBinContent(bin)*100);
+        hTDCTub1->SetBinContent(bin, r_CHymin[0] + hTDCTub1->GetBinContent(bin)*r_pulsetime_count_scaling);
+        hTDCTub2->SetBinContent(bin, r_CHymin[1] + hTDCTub2->GetBinContent(bin)*r_pulsetime_count_scaling);
+        hTDCCounter1Pulse1->SetBinContent(bin, r_CHymin[2] + hTDCCounter1Pulse1->GetBinContent(bin)*r_pulsetime_count_scaling);
+        hTDCCounter1Pulse2->SetBinContent(bin, r_CHymin[2] + hTDCCounter1Pulse2->GetBinContent(bin)*r_pulsetime_count_scaling);
+        hTDCCounter2Pulse1->SetBinContent(bin, r_CHymin[3] + hTDCCounter2Pulse1->GetBinContent(bin)*r_pulsetime_count_scaling);
+        hTDCCounter2Pulse2->SetBinContent(bin, r_CHymin[3] + hTDCCounter2Pulse2->GetBinContent(bin)*r_pulsetime_count_scaling);
     }
     
     fCanvas->cd(1);
-    hCH0->GetXaxis()->SetRangeUser(500, 2000);
-    hCH0->GetYaxis()->SetRangeUser(fCHymin[0], fCHymax[0]);
+    // hCH0->GetXaxis()->SetRangeUser(500, 2000);
+    hCH0->GetYaxis()->SetRangeUser(r_CHymin[0], r_CHymax[0]);
     hCH0->Draw();
     hTDCTub1->Draw("same");
+    fLine_SigTub[0][0]->Draw();
+    fLine_SigTub[0][1]->Draw();
     
     fCanvas->cd(2);
-    hCH1->GetXaxis()->SetRangeUser(500, 2000);
-    hCH1->GetYaxis()->SetRangeUser(fCHymin[1], fCHymax[1]);
+    // hCH1->GetXaxis()->SetRangeUser(500, 2000);
+    hCH1->GetYaxis()->SetRangeUser(r_CHymin[1], r_CHymax[1]);
     hCH1->Draw();
     hTDCTub2->Draw("same");
+    fLine_SigTub[1][0]->Draw();
+    fLine_SigTub[1][1]->Draw();
     
     fCanvas->cd(3);
-    hCH2->GetXaxis()->SetRangeUser(500, 2000);
-    hCH2->GetYaxis()->SetRangeUser(fCHymin[2], fCHymax[2]);
+    // hCH2->GetXaxis()->SetRangeUser(500, 2000);
+    hCH2->GetYaxis()->SetRangeUser(r_CHymin[2], r_CHymax[2]);
     hCH2->Draw();
     hTDCCounter1Pulse1->Draw("same");
     hTDCCounter1Pulse2->Draw("same");
+    fLine_SigCounter[0][0][0]->Draw();
+    fLine_SigCounter[0][0][1]->Draw();
+    fLine_SigCounter[0][1][0]->Draw();
+    fLine_SigCounter[0][1][1]->Draw();
     
     fCanvas->cd(4);
-    hCH3->GetXaxis()->SetRangeUser(500, 2000);
-    hCH3->GetYaxis()->SetRangeUser(fCHymin[3], fCHymax[3]);
+    // hCH3->GetXaxis()->SetRangeUser(500, 2000);
+    hCH3->GetYaxis()->SetRangeUser(r_CHymin[3], r_CHymax[3]);
     hCH3->Draw();
     hTDCCounter2Pulse1->Draw("same");
     hTDCCounter2Pulse2->Draw("same");
+    fLine_SigCounter[1][0][0]->Draw();
+    fLine_SigCounter[1][0][1]->Draw();
+    fLine_SigCounter[1][1][0]->Draw();
+    fLine_SigCounter[1][1][1]->Draw();
     
     fCanvas->cd(5);
     TString s = Form("Run Number: %i", f_run_number);
@@ -388,10 +481,10 @@ int MainWindow::DoDraw()
     TTimeStamp ts(f_runstart-4*3600);
     fText_runstart->SetText(0.02, 0.6, ts.AsString("s"));
     fText_runstart->Draw();    
-    s.Form("Run Type: %i", f_runtype);
+    s.Form("Run Type: %s", fRunTypeMap[f_runtype].c_str());
     fText_runtype->SetText(0.02, 0.4, s.Data());
     fText_runtype->Draw();
-    s.Form("Sample Type: %i", f_sampletype);
+    s.Form("Sample Type: %s", fSampleTypeMap[f_sampletype].c_str());
     fText_sampletype->SetText(0.02, 0.2, s.Data());
     fText_sampletype->Draw();
     

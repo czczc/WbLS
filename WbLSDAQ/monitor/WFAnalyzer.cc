@@ -10,6 +10,7 @@ using namespace std;
 WFAnalyzer::WFAnalyzer(WblsDaq::Event* evt)
 {
     fEvent = evt;
+    SetPulseWindow();
 }
 
 WFAnalyzer::~WFAnalyzer()
@@ -20,9 +21,58 @@ WFAnalyzer::~WFAnalyzer()
 void WFAnalyzer::Process()
 {
     ProcessTub(1);
-    // ProcessTub(2);
+    ProcessTub(2);
     ProcessCounter(1);
     ProcessCounter(2);
+}
+
+void WFAnalyzer::SetPulseWindow()
+{
+    double ref = 1250; // fadc bin of tub1 peak;
+    double prePulse_tub = 100; // # of bins to include before the peak for tub (can be longer window)
+    double postPulse_tub = 200; // # of bins to include after the peak for tub (can be longer window)
+    double prePulse_counter = 50; // # of bins to include before the peak
+    double postPulse_counter = 100; // # of bins to include after the peak
+    
+    
+    // ____________________________
+    // |T1
+    // ____________________________
+    // |T2
+    // ____________________________
+    //    |H1      |VC
+    // ____________________________
+    //    |H2      |H3
+    
+    double T2_to_T1 = 0;
+    double H1_to_T1 = 40;
+    double VC_to_H1 = 150;
+    double H2_to_T1 = 40;
+    double H3_to_H2 = 150;
+    
+    // tub 1
+    g_tStartTub[0] = ref - prePulse_tub; 
+     g_tStopTub[0] = ref + postPulse_tub;
+    
+    // tub 2
+    g_tStartTub[1] = ref + T2_to_T1 - prePulse_tub; 
+     g_tStopTub[1] = ref + T2_to_T1 + postPulse_tub;
+    
+    // counter1 pulse1
+    g_tStartCounterPulse[0][0] = ref + H1_to_T1 - prePulse_counter; 
+     g_tStopCounterPulse[0][0] = ref + H1_to_T1 + postPulse_counter; 
+     
+    // counter1 pulse2
+    g_tStartCounterPulse[0][1] = ref + H1_to_T1 + VC_to_H1 - prePulse_counter; 
+     g_tStopCounterPulse[0][1] = ref + H1_to_T1 + VC_to_H1 + postPulse_counter;
+    
+    // counter2 pulse1
+    g_tStartCounterPulse[1][0] = ref + H2_to_T1 - prePulse_counter; 
+     g_tStopCounterPulse[1][0] = ref + H2_to_T1 + postPulse_counter; 
+     
+    // counter2 pulse2
+    g_tStartCounterPulse[1][1] = ref + H2_to_T1 + H3_to_H2 - prePulse_counter; 
+     g_tStopCounterPulse[1][1] = ref + H2_to_T1 + H3_to_H2 + postPulse_counter; 
 }
 
 void WFAnalyzer::ProcessTub(int tubNo)
@@ -64,44 +114,59 @@ void WFAnalyzer::ProcessTub(int tubNo)
         // cout << cleanTrace[i] << endl;
     }
     
-    // find max pulse
-    vector<double> pulses;
-    vector<double> tdcs;
+    // // calculate pulse with pulse finding of continuous area
+    // vector<double> pulses;
+    // vector<double> tdcs;
+    // double charge = 0;
+    // double tdc = 0;
+    // bool foundPulse = false;
+    // const int THRESHOLD = 10; // threshold for tdc start
+    // for (unsigned i=0; i<WblsDaq::NFADCBins-1; i++) {
+    //     if (cleanTrace[i]>0 && cleanTrace[i+1]>0) {
+    //         foundPulse = true;
+    //         charge += cleanTrace[i];
+    //         if(cleanTrace[i]<THRESHOLD && cleanTrace[i+1]>THRESHOLD && tdc<1) tdc = i;
+    //     }
+    //     else {
+    //         if(foundPulse) {
+    //             pulses.push_back(charge);
+    //             tdcs.push_back(tdc);
+    //         }
+    //         charge = 0;
+    //         tdc = 0;
+    //         foundPulse = false;
+    //     }
+    // }
+    // double maxCharge = 0;
+    // double pulseTdc = 0;
+    // for (unsigned i=0; i<pulses.size(); i++) {
+    //     if (pulses[i] > maxCharge) {
+    //         maxCharge = pulses[i];
+    //         pulseTdc = tdcs[i];
+    //     }
+    // }
+    // fCharge_Tub[tubNo-1] = maxCharge; 
+    //    fTDC_Tub[tubNo-1] = pulseTdc;
+    
+    // calculate pulse in fixed window
     double charge = 0;
     double tdc = 0;
-    bool foundPulse = false;
-    const int THRESHOLD = 10; // threshold for tdc start
+    const int THRESHOLD = 100; // threshold for tdc start
+    
     for (unsigned i=0; i<WblsDaq::NFADCBins-1; i++) {
-        if (cleanTrace[i]>0 && cleanTrace[i+1]>0) {
-            foundPulse = true;
+        if(i>=g_tStartTub[tubNo-1] && i<=g_tStopTub[tubNo-1]) {
             charge += cleanTrace[i];
             if(cleanTrace[i]<THRESHOLD && cleanTrace[i+1]>THRESHOLD && tdc<1) tdc = i;
-        }
-        else {
-            if(foundPulse) {
-                pulses.push_back(charge);
-                tdcs.push_back(tdc);
-            }
-            charge = 0;
-            tdc = 0;
-            foundPulse = false;
+            
         }
     }
-    double maxCharge = 0;
-    double pulseTdc = 0;
-    for (unsigned i=0; i<pulses.size(); i++) {
-        if (pulses[i] > maxCharge) {
-            maxCharge = pulses[i];
-            pulseTdc = tdcs[i];
-        }
-    }
-    fCharge_Tub[tubNo-1] = maxCharge; 
-       fTDC_Tub[tubNo-1] = pulseTdc;
+    fCharge_Tub[tubNo-1] = charge; 
+       fTDC_Tub[tubNo-1] = tdc;
      
     // draw trace
     // TCanvas *c1 = new TCanvas();
-    TGraph *g = new TGraph(WblsDaq::NFADCBins, xPoints, cleanTrace);
-    g->Draw("AL");
+    // TGraph *g = new TGraph(WblsDaq::NFADCBins, xPoints, cleanTrace);
+    // g->Draw("AL");
 }
 
 void WFAnalyzer::ProcessCounter(int counterNo)
@@ -144,10 +209,6 @@ void WFAnalyzer::ProcessCounter(int counterNo)
     }
     
     // calculate pulse in fixed window
-    const unsigned START_PULSE1 = 1200;
-    const unsigned END_PULSE1 = 1600;
-    const unsigned START_PULSE2 = 1800;
-    const unsigned END_PULSE2 = 2200;
     double charge1 = 0;
     double tdc1 = 0;
     double charge2 = 0;
@@ -155,12 +216,12 @@ void WFAnalyzer::ProcessCounter(int counterNo)
     const int THRESHOLD = 100; // threshold for tdc start
     
     for (unsigned i=0; i<WblsDaq::NFADCBins-1; i++) {
-        if(i>=START_PULSE1 && i<=END_PULSE1) {
+        if(i>=g_tStartCounterPulse[counterNo-1][0] && i<=g_tStopCounterPulse[counterNo-1][0]) {
             charge1 += cleanTrace[i];
             if(cleanTrace[i]<THRESHOLD && cleanTrace[i+1]>THRESHOLD && tdc1<1) tdc1 = i;
             
         }
-        else if(i>=START_PULSE2 && i<=END_PULSE2) {
+        else if(i>=g_tStartCounterPulse[counterNo-1][1] && i<=g_tStartCounterPulse[counterNo-1][1]) {
             charge2 += cleanTrace[i];
             if(cleanTrace[i]<THRESHOLD && cleanTrace[i+1]>THRESHOLD && tdc2<1) tdc2 = i;
             

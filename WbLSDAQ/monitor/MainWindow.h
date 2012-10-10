@@ -5,6 +5,8 @@
 #include "WblsDaqEvent.h"
 
 #include <string>
+#include <map>
+#include <string>
 
 class TTimer;
 class TRootEmbeddedCanvas;
@@ -12,6 +14,7 @@ class TCanvas;
 class TH1F;
 class TTree;
 class TText;
+class TLine;
 
 class MainWindow: public TGMainFrame
 {
@@ -26,19 +29,22 @@ public:
     
     Bool_t HandleTimer(TTimer *t);
     std::string GetLastFile();
+    void SetFixedRanges();
+    void SetDynamicRanges();
+    void SetSignalWindow();
     void SetProperties();
-    void FixCHAxisRange();
     void InitSpillTree();
+    void InitMaps();
     
     TRootEmbeddedCanvas *fEcanvas;
     TCanvas *fCanvas;
     TTimer *fTimer;
     TTree* fSpillTree;
     TCanvas *fTempCanvas;
+    map<int, std::string> fRunTypeMap;
+    map<int, std::string> fSampleTypeMap;
     
     string fLastFile;
-    double fCHymin[4];
-    double fCHymax[4];
     int f_run_number;
     int f_runtype;
     int f_sampletype;
@@ -49,6 +55,8 @@ public:
     TText *fText_sampletype;
     TText *fText_runstart;
     TText *fText_runstop;
+    TLine *fLine_SigTub[2][2];
+    TLine *fLine_SigCounter[2][2][2];
     
     TH1F* hCH0;
     TH1F* hCH1;
@@ -79,13 +87,23 @@ public:
     Float_t s_meanCharge_Counter2Pulse1; 
     Float_t s_meanCharge_Counter2Pulse2;
     
-    Float_t r_meanCharge_Tub;
-    Float_t r_meanCharge_Counter1;
-    Float_t r_meanCharge_Counter2;
+    double r_CHymin[4];
+    double r_CHymax[4];
+    double r_pulsetime_count_scaling;
+    double r_meanCharge_Tub;
+    double r_meanCharge_Counter1;
+    double r_meanCharge_Counter2;
+    double r_dtTrigger_min;
+    double r_dtTrigger_max;
     
     int g_nSpills;
     double g_tLastTrigger;
     
+    double g_tStartTub[2]; 
+    double g_tStopTub[2];
+    double g_tStartCounterPulse[2][2];
+    double g_tStopCounterPulse[2][2];
+        
     ClassDef(MainWindow, 0)
 };
 

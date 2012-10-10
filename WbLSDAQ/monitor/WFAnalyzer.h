@@ -12,6 +12,7 @@ public:
     void ProcessTub(int i); 
     void ProcessCounter(int i); 
     
+    void SetPulseWindow();
     void Test();
     
     WblsDaq::Event* fEvent;
@@ -23,6 +24,11 @@ public:
     double fBaseLine_Counter[2];
     double fCharge_Counter[2][2]; // counter i, pulse j
     double fTDC_Counter[2][2];
+    
+    double g_tStartTub[2]; 
+    double g_tStopTub[2];
+    double g_tStartCounterPulse[2][2];
+    double g_tStopCounterPulse[2][2];
 };
 
 #endif
