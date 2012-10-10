@@ -15,6 +15,7 @@ class TH1F;
 class TTree;
 class TText;
 class TLine;
+class TGraph;
 
 class MainWindow: public TGMainFrame
 {
@@ -33,16 +34,17 @@ public:
     void SetDynamicRanges();
     void SetSignalWindow();
     void SetProperties();
-    void InitSpillTree();
+    // void InitSpillTree();
     void InitMaps();
     
     TRootEmbeddedCanvas *fEcanvas;
     TCanvas *fCanvas;
     TTimer *fTimer;
     TTree* fSpillTree;
-    TCanvas *fTempCanvas;
+    // TCanvas *fTempCanvas;
     map<int, std::string> fRunTypeMap;
     map<int, std::string> fSampleTypeMap;
+    bool fIsFakeData;
     
     string fLastFile;
     int f_run_number;
@@ -78,6 +80,14 @@ public:
     TH1F* hTDCCounter2Pulse2;
     
     TH1F* hDtTriggers;
+    
+    TGraph* h_nTriggers;
+    TGraph* h_meanCharge_Tub1;
+    TGraph* h_meanCharge_Tub2;
+    TGraph* h_meanCharge_Counter1Pulse1;
+    TGraph* h_meanCharge_Counter1Pulse2;
+    TGraph* h_meanCharge_Counter2Pulse1;
+    TGraph* h_meanCharge_Counter2Pulse2;
     
     int s_nTriggers;
     Float_t s_meanCharge_Tub1; 

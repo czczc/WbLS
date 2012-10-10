@@ -16,6 +16,7 @@
 #include "TText.h"
 #include "TTimeStamp.h"
 #include "TLine.h"
+#include "TGraph.h"
 
 #include <iostream>
 #include <fstream>
@@ -24,6 +25,8 @@ using namespace std;
 MainWindow::MainWindow(const TGWindow *p, int w,int h)
     : TGMainFrame(p, w, h)
 {
+    // fIsFakeData = true;
+    fIsFakeData = false;
     g_nSpills = 0;
     g_tLastTrigger = -1;
     g_processDone = true;
@@ -74,10 +77,20 @@ MainWindow::MainWindow(const TGWindow *p, int w,int h)
     hTDCCounter2Pulse2 = new TH1F("hTDCCounter2Pulse2", "", WblsDaq::NFADCBins, 0, WblsDaq::NFADCBins);;
     
     hDtTriggers = new TH1F("hDtTriggers", "Time Between Triggers", 100, r_dtTrigger_min, r_dtTrigger_max);
-    InitSpillTree();
+    
+    h_nTriggers = new TGraph();
+    h_meanCharge_Tub1 = new TGraph();
+    h_meanCharge_Tub2 = new TGraph();
+    h_meanCharge_Counter1Pulse1 = new TGraph();
+    h_meanCharge_Counter1Pulse2 = new TGraph();
+    h_meanCharge_Counter2Pulse1 = new TGraph();
+    h_meanCharge_Counter2Pulse2 = new TGraph();
+    
+    
+    // InitSpillTree();
     InitMaps();
     
-    fTempCanvas = new TCanvas("tempC", "tempC", 100, 100);
+    // fTempCanvas = new TCanvas("tempC", "tempC", 100, 100);
     fEcanvas = new TRootEmbeddedCanvas("Ecanvas", this, 1500, 800);
     AddFrame(fEcanvas, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 2, 2, 2, 2));
     fCanvas = fEcanvas->GetCanvas();
@@ -126,19 +139,27 @@ MainWindow::~MainWindow()
     delete hTDCCounter2Pulse2;
     
     delete hDtTriggers;
+    
+    delete h_nTriggers;
+    delete h_meanCharge_Tub1;
+    delete h_meanCharge_Tub2;
+    delete h_meanCharge_Counter1Pulse1;
+    delete h_meanCharge_Counter1Pulse2;
+    delete h_meanCharge_Counter2Pulse1;
+    delete h_meanCharge_Counter2Pulse2;
 }
 
-void MainWindow::InitSpillTree()
-{
-    fSpillTree = new TTree("spillTree", "Stats of Each Spill");
-    fSpillTree->Branch("nTriggers", &s_nTriggers);
-    fSpillTree->Branch("meanCharge_Tub1", &s_meanCharge_Tub1);
-    fSpillTree->Branch("meanCharge_Tub2", &s_meanCharge_Tub2);
-    fSpillTree->Branch("meanCharge_Counter1Pulse1", &s_meanCharge_Counter1Pulse1);
-    fSpillTree->Branch("meanCharge_Counter1Pulse2", &s_meanCharge_Counter1Pulse2);
-    fSpillTree->Branch("meanCharge_Counter2Pulse1", &s_meanCharge_Counter2Pulse1);
-    fSpillTree->Branch("meanCharge_Counter2Pulse2", &s_meanCharge_Counter2Pulse2);
-}
+// void MainWindow::InitSpillTree()
+// {
+//     fSpillTree = new TTree("spillTree", "Stats of Each Spill");
+//     fSpillTree->Branch("nTriggers", &s_nTriggers);
+//     fSpillTree->Branch("meanCharge_Tub1", &s_meanCharge_Tub1);
+//     fSpillTree->Branch("meanCharge_Tub2", &s_meanCharge_Tub2);
+//     fSpillTree->Branch("meanCharge_Counter1Pulse1", &s_meanCharge_Counter1Pulse1);
+//     fSpillTree->Branch("meanCharge_Counter1Pulse2", &s_meanCharge_Counter1Pulse2);
+//     fSpillTree->Branch("meanCharge_Counter2Pulse1", &s_meanCharge_Counter2Pulse1);
+//     fSpillTree->Branch("meanCharge_Counter2Pulse2", &s_meanCharge_Counter2Pulse2);
+// }
 
 void MainWindow::InitMaps()
 {
@@ -181,7 +202,7 @@ void MainWindow::SetFixedRanges()
     r_CHymin[3] = 2000; r_CHymax[3] = 8300;
     
     // scaling for pulsetime count (to show on waveform plot)
-    r_pulsetime_count_scaling = 300;
+    r_pulsetime_count_scaling = 200;
     
     // max mean charge of the pmts to show on the history plot
     r_meanCharge_Tub = 80000.;
@@ -259,6 +280,22 @@ void MainWindow::SetProperties()
     
     hDtTriggers->GetXaxis()->SetTitle("log_{10}(#DeltaT_{triggers})");
     
+    h_nTriggers->SetTitle("Number of Triggers");
+    h_meanCharge_Tub1->SetTitle("Charge of Tub");
+    h_meanCharge_Tub2->SetTitle("Charge of Tub");
+    h_meanCharge_Counter1Pulse1->SetTitle("Charge of Counter");
+    h_meanCharge_Counter1Pulse2->SetTitle("Charge of Counter");
+    h_meanCharge_Counter2Pulse1->SetTitle("Charge of Counter");
+    h_meanCharge_Counter2Pulse2->SetTitle("Charge of Counter");
+    
+    h_meanCharge_Tub1->SetMarkerColor(kRed);
+    h_meanCharge_Tub2->SetMarkerColor(kBlue);
+    h_meanCharge_Counter1Pulse1->SetMarkerColor(kRed);
+    h_meanCharge_Counter1Pulse2->SetMarkerColor(kBlue);
+    h_meanCharge_Counter2Pulse1->SetMarkerColor(kRed);
+    h_meanCharge_Counter2Pulse2->SetMarkerColor(kBlue);
+    
+    
     for (int i=1; i!=5; i++) {
         fCanvas->cd(i);
         gPad->SetGridx();
@@ -317,7 +354,8 @@ int MainWindow::LoadLastSpill()
     // spinner.PrintRunInfo();
     WblsDaq::Header* f_header = spinner.header();
     WblsDaq::Footer* f_footer = spinner.footer();
-    f_run_number = f_header->run_number;
+    if (fIsFakeData) { f_run_number = g_nSpills; }
+    else { f_run_number = f_header->run_number; }
     f_runtype = f_header->runtype;
     f_sampletype = f_header->sampletype;
     f_runstart = f_header->runstart;
@@ -392,7 +430,15 @@ int MainWindow::LoadLastSpill()
     s_meanCharge_Counter2Pulse2 /= s_nTriggers;
     // cout << s_meanCharge_Counter2Pulse1 << ", " << s_meanCharge_Counter2Pulse2 << endl;
     
-    fSpillTree->Fill();
+    h_nTriggers->SetPoint(h_nTriggers->GetN(), f_run_number, s_nTriggers);
+    h_meanCharge_Tub1->SetPoint(h_meanCharge_Tub1->GetN(), f_run_number, s_meanCharge_Tub1);
+    h_meanCharge_Tub2->SetPoint(h_meanCharge_Tub2->GetN(), f_run_number, s_meanCharge_Tub2);
+    h_meanCharge_Counter1Pulse1->SetPoint(h_meanCharge_Counter1Pulse1->GetN(), f_run_number, s_meanCharge_Counter1Pulse1);
+    h_meanCharge_Counter1Pulse2->SetPoint(h_meanCharge_Counter1Pulse2->GetN(), f_run_number, s_meanCharge_Counter1Pulse2);
+    h_meanCharge_Counter2Pulse1->SetPoint(h_meanCharge_Counter2Pulse1->GetN(), f_run_number, s_meanCharge_Counter2Pulse1);
+    h_meanCharge_Counter2Pulse2->SetPoint(h_meanCharge_Counter2Pulse2->GetN(), f_run_number, s_meanCharge_Counter2Pulse2);
+    
+    // fSpillTree->Fill();
     g_processDone = true;
     
     return 1;
@@ -510,85 +556,107 @@ int MainWindow::DoDraw()
     
     fCanvas->cd(10);
     hDtTriggers->Draw();
-        
-    fTempCanvas->cd();
-    TH2F *h_nTriggers = (TH2F*)gDirectory->Get("h_nTriggers");
-    if (h_nTriggers) delete h_nTriggers;
-    fSpillTree->Draw("nTriggers:Entry$>>h_nTriggers");
+    
     fCanvas->cd(11);
-    h_nTriggers = (TH2F*)gDirectory->Get("h_nTriggers");
-    h_nTriggers->GetXaxis()->SetTitle("Spill #");
-    h_nTriggers->SetTitle("Number of Triggers");
-    h_nTriggers->Draw();
+    h_nTriggers->GetXaxis()->SetTitle("Run Number");
+    h_nTriggers->Draw("AP");    
     
-    fTempCanvas->cd();
-    TH2F *h_meanCharge_Tub1 = (TH2F*)gDirectory->Get("h_meanCharge_Tub1");
-    TH2F *h_meanCharge_Tub2 = (TH2F*)gDirectory->Get("h_meanCharge_Tub2");
-    if (h_meanCharge_Tub1) delete h_meanCharge_Tub1;
-    if (h_meanCharge_Tub2) delete h_meanCharge_Tub2;
-    fSpillTree->Draw("meanCharge_Tub1:Entry$>>h_meanCharge_Tub1");
-    fSpillTree->Draw("meanCharge_Tub2:Entry$>>h_meanCharge_Tub2");
     fCanvas->cd(12);
-    TH2F *htemp = (TH2F*)gDirectory->Get("htemp");
-    if (htemp) delete htemp;
-    h_meanCharge_Tub1 = (TH2F*)gDirectory->Get("h_meanCharge_Tub1");
-    h_meanCharge_Tub2 = (TH2F*)gDirectory->Get("h_meanCharge_Tub2");
-    htemp = new TH2F("htemp", "htemp", 
-        g_nSpills, 0, g_nSpills, 
-        1000, 0, r_meanCharge_Tub);
-    htemp->GetXaxis()->SetTitle("Spill #");
-    htemp->SetTitle("Mean Charge of Tub");
-    htemp->Draw();
-    h_meanCharge_Tub1->SetMarkerColor(kRed);
-    h_meanCharge_Tub1->Draw("same");
-    h_meanCharge_Tub2->SetMarkerColor(kBlue);
-    h_meanCharge_Tub2->Draw("same");
+    h_meanCharge_Tub1->GetXaxis()->SetTitle("Run Number");
+    h_meanCharge_Tub1->Draw("AP");
+    h_meanCharge_Tub1->GetYaxis()->SetRangeUser(0, r_meanCharge_Tub);
+    h_meanCharge_Tub2->Draw("P,same");
     
-    fTempCanvas->cd();
-    TH2F *h_meanCharge_Counter1Pulse1 = (TH2F*)gDirectory->Get("h_meanCharge_Counter1Pulse1");
-    TH2F *h_meanCharge_Counter1Pulse2 = (TH2F*)gDirectory->Get("h_meanCharge_Counter1Pulse2");
-    if (h_meanCharge_Counter1Pulse1) delete h_meanCharge_Counter1Pulse1;
-    if (h_meanCharge_Counter1Pulse2) delete h_meanCharge_Counter1Pulse2;
-    fSpillTree->Draw("meanCharge_Counter1Pulse1:Entry$>>h_meanCharge_Counter1Pulse1");
-    fSpillTree->Draw("meanCharge_Counter1Pulse2:Entry$>>h_meanCharge_Counter1Pulse2");
     fCanvas->cd(13);
-    TH2F *htemp2 = (TH2F*)gDirectory->Get("htemp2");
-    if (htemp2) delete htemp2;
-    h_meanCharge_Counter1Pulse1 = (TH2F*)gDirectory->Get("h_meanCharge_Counter1Pulse1");
-    h_meanCharge_Counter1Pulse2 = (TH2F*)gDirectory->Get("h_meanCharge_Counter1Pulse2");
-    htemp2 = new TH2F("htemp2", "htemp2", 
-        g_nSpills, 0, g_nSpills, 
-        1000, 0, r_meanCharge_Counter1);
-    htemp2->GetXaxis()->SetTitle("Spill #");
-    htemp2->SetTitle("Mean Charge of Counter 1");
-    htemp2->Draw();
-    h_meanCharge_Counter1Pulse1->SetMarkerColor(kRed);
-    h_meanCharge_Counter1Pulse1->Draw("same");
-    h_meanCharge_Counter1Pulse2->SetMarkerColor(kBlue);
-    h_meanCharge_Counter1Pulse2->Draw("same");
+    h_meanCharge_Counter1Pulse1->GetXaxis()->SetTitle("Run Number");
+    h_meanCharge_Counter1Pulse1->Draw("AP");
+    h_meanCharge_Counter1Pulse1->GetYaxis()->SetRangeUser(0, r_meanCharge_Counter1);
+    h_meanCharge_Counter1Pulse2->Draw("P,same");
     
-    fTempCanvas->cd();
-    TH2F *h_meanCharge_Counter2Pulse1 = (TH2F*)gDirectory->Get("h_meanCharge_Counter2Pulse1");
-    TH2F *h_meanCharge_Counter2Pulse2 = (TH2F*)gDirectory->Get("h_meanCharge_Counter2Pulse2");
-    if (h_meanCharge_Counter2Pulse1) delete h_meanCharge_Counter2Pulse1;
-    if (h_meanCharge_Counter2Pulse2) delete h_meanCharge_Counter2Pulse2;
-    fSpillTree->Draw("meanCharge_Counter2Pulse1:Entry$>>h_meanCharge_Counter2Pulse1");
-    fSpillTree->Draw("meanCharge_Counter2Pulse2:Entry$>>h_meanCharge_Counter2Pulse2");
     fCanvas->cd(14);
-    TH2F *htemp3 = (TH2F*)gDirectory->Get("htemp3");
-    if (htemp3) delete htemp3;
-    h_meanCharge_Counter2Pulse1 = (TH2F*)gDirectory->Get("h_meanCharge_Counter2Pulse1");
-    h_meanCharge_Counter2Pulse2 = (TH2F*)gDirectory->Get("h_meanCharge_Counter2Pulse2");
-    htemp3 = new TH2F("htemp3", "htemp3", 
-        g_nSpills, 0, g_nSpills, 
-        1000, 0, r_meanCharge_Counter2);
-    htemp3->GetXaxis()->SetTitle("Spill #");
-    htemp3->SetTitle("Mean Charge of Counter 2");
-    htemp3->Draw();
-    h_meanCharge_Counter2Pulse1->SetMarkerColor(kRed);
-    h_meanCharge_Counter2Pulse1->Draw("same");
-    h_meanCharge_Counter2Pulse2->SetMarkerColor(kBlue);
-    h_meanCharge_Counter2Pulse2->Draw("same");
+    h_meanCharge_Counter2Pulse1->GetXaxis()->SetTitle("Run Number");
+    h_meanCharge_Counter2Pulse1->Draw("AP");
+    h_meanCharge_Counter2Pulse1->GetYaxis()->SetRangeUser(0, r_meanCharge_Counter2);
+    h_meanCharge_Counter2Pulse2->Draw("P,same");
+    
+    // fTempCanvas->cd();
+    // TH2F *h_nTriggers = (TH2F*)gDirectory->Get("h_nTriggers");
+    // if (h_nTriggers) delete h_nTriggers;
+    // fSpillTree->Draw("nTriggers:Entry$>>h_nTriggers");
+    // fCanvas->cd(11);
+    // h_nTriggers = (TH2F*)gDirectory->Get("h_nTriggers");
+    // h_nTriggers->GetXaxis()->SetTitle("Spill #");
+    // h_nTriggers->SetTitle("Number of Triggers");
+    // h_nTriggers->Draw();
+    // 
+    // fTempCanvas->cd();
+    // TH2F *h_meanCharge_Tub1 = (TH2F*)gDirectory->Get("h_meanCharge_Tub1");
+    // TH2F *h_meanCharge_Tub2 = (TH2F*)gDirectory->Get("h_meanCharge_Tub2");
+    // if (h_meanCharge_Tub1) delete h_meanCharge_Tub1;
+    // if (h_meanCharge_Tub2) delete h_meanCharge_Tub2;
+    // fSpillTree->Draw("meanCharge_Tub1:Entry$>>h_meanCharge_Tub1");
+    // fSpillTree->Draw("meanCharge_Tub2:Entry$>>h_meanCharge_Tub2");
+    // fCanvas->cd(12);
+    // TH2F *htemp = (TH2F*)gDirectory->Get("htemp");
+    // if (htemp) delete htemp;
+    // h_meanCharge_Tub1 = (TH2F*)gDirectory->Get("h_meanCharge_Tub1");
+    // h_meanCharge_Tub2 = (TH2F*)gDirectory->Get("h_meanCharge_Tub2");
+    // htemp = new TH2F("htemp", "htemp", 
+    //     g_nSpills, 0, g_nSpills, 
+    //     1000, 0, r_meanCharge_Tub);
+    // htemp->GetXaxis()->SetTitle("Spill #");
+    // htemp->SetTitle("Mean Charge of Tub");
+    // htemp->Draw();
+    // h_meanCharge_Tub1->SetMarkerColor(kRed);
+    // h_meanCharge_Tub1->Draw("same");
+    // h_meanCharge_Tub2->SetMarkerColor(kBlue);
+    // h_meanCharge_Tub2->Draw("same");
+    // 
+    // fTempCanvas->cd();
+    // TH2F *h_meanCharge_Counter1Pulse1 = (TH2F*)gDirectory->Get("h_meanCharge_Counter1Pulse1");
+    // TH2F *h_meanCharge_Counter1Pulse2 = (TH2F*)gDirectory->Get("h_meanCharge_Counter1Pulse2");
+    // if (h_meanCharge_Counter1Pulse1) delete h_meanCharge_Counter1Pulse1;
+    // if (h_meanCharge_Counter1Pulse2) delete h_meanCharge_Counter1Pulse2;
+    // fSpillTree->Draw("meanCharge_Counter1Pulse1:Entry$>>h_meanCharge_Counter1Pulse1");
+    // fSpillTree->Draw("meanCharge_Counter1Pulse2:Entry$>>h_meanCharge_Counter1Pulse2");
+    // fCanvas->cd(13);
+    // TH2F *htemp2 = (TH2F*)gDirectory->Get("htemp2");
+    // if (htemp2) delete htemp2;
+    // h_meanCharge_Counter1Pulse1 = (TH2F*)gDirectory->Get("h_meanCharge_Counter1Pulse1");
+    // h_meanCharge_Counter1Pulse2 = (TH2F*)gDirectory->Get("h_meanCharge_Counter1Pulse2");
+    // htemp2 = new TH2F("htemp2", "htemp2", 
+    //     g_nSpills, 0, g_nSpills, 
+    //     1000, 0, r_meanCharge_Counter1);
+    // htemp2->GetXaxis()->SetTitle("Spill #");
+    // htemp2->SetTitle("Mean Charge of Counter 1");
+    // htemp2->Draw();
+    // h_meanCharge_Counter1Pulse1->SetMarkerColor(kRed);
+    // h_meanCharge_Counter1Pulse1->Draw("same");
+    // h_meanCharge_Counter1Pulse2->SetMarkerColor(kBlue);
+    // h_meanCharge_Counter1Pulse2->Draw("same");
+    // 
+    // fTempCanvas->cd();
+    // TH2F *h_meanCharge_Counter2Pulse1 = (TH2F*)gDirectory->Get("h_meanCharge_Counter2Pulse1");
+    // TH2F *h_meanCharge_Counter2Pulse2 = (TH2F*)gDirectory->Get("h_meanCharge_Counter2Pulse2");
+    // if (h_meanCharge_Counter2Pulse1) delete h_meanCharge_Counter2Pulse1;
+    // if (h_meanCharge_Counter2Pulse2) delete h_meanCharge_Counter2Pulse2;
+    // fSpillTree->Draw("meanCharge_Counter2Pulse1:Entry$>>h_meanCharge_Counter2Pulse1");
+    // fSpillTree->Draw("meanCharge_Counter2Pulse2:Entry$>>h_meanCharge_Counter2Pulse2");
+    // fCanvas->cd(14);
+    // TH2F *htemp3 = (TH2F*)gDirectory->Get("htemp3");
+    // if (htemp3) delete htemp3;
+    // h_meanCharge_Counter2Pulse1 = (TH2F*)gDirectory->Get("h_meanCharge_Counter2Pulse1");
+    // h_meanCharge_Counter2Pulse2 = (TH2F*)gDirectory->Get("h_meanCharge_Counter2Pulse2");
+    // htemp3 = new TH2F("htemp3", "htemp3", 
+    //     g_nSpills, 0, g_nSpills, 
+    //     1000, 0, r_meanCharge_Counter2);
+    // htemp3->GetXaxis()->SetTitle("Spill #");
+    // htemp3->SetTitle("Mean Charge of Counter 2");
+    // htemp3->Draw();
+    // h_meanCharge_Counter2Pulse1->SetMarkerColor(kRed);
+    // h_meanCharge_Counter2Pulse1->Draw("same");
+    // h_meanCharge_Counter2Pulse2->SetMarkerColor(kBlue);
+    // h_meanCharge_Counter2Pulse2->Draw("same");
     
     return 1;
 }
