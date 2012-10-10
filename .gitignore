@@ -25,6 +25,7 @@ Thumbs.db
 .root_hist
 geofile.txt
 *.log
+lastfile.txt
 
 # tmp directories#
 ###################
