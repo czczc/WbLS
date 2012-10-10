@@ -26,6 +26,7 @@ MainWindow::MainWindow(const TGWindow *p, int w,int h)
 {
     g_nSpills = 0;
     g_tLastTrigger = -1;
+    g_processDone = true;
     SetFixedRanges();
     
     fTimer = new TTimer(this, 4000);
@@ -322,6 +323,7 @@ int MainWindow::LoadLastSpill()
     f_runstart = f_header->runstart;
     f_runstop = f_footer->runstop;
     
+    g_processDone = false;
     for (int i=0; i < s_nTriggers; ++i) {
         WblsDaq::Event* evt = spinner.event(i);    
         if (!evt) {
@@ -391,12 +393,16 @@ int MainWindow::LoadLastSpill()
     // cout << s_meanCharge_Counter2Pulse1 << ", " << s_meanCharge_Counter2Pulse2 << endl;
     
     fSpillTree->Fill();
+    g_processDone = true;
     
     return 1;
 }
 
 int MainWindow::Update()
 {
+    // do not update if last file has not finished processing
+    if (!g_processDone) return 0;
+    
     string lastfile = GetLastFile();
     if (lastfile == fLastFile) {
         // nothing to Update

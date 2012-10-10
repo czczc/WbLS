@@ -98,6 +98,7 @@ public:
     
     int g_nSpills;
     double g_tLastTrigger;
+    bool g_processDone;
     
     double g_tStartTub[2]; 
     double g_tStopTub[2];
