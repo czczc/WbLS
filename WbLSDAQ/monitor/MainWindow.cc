@@ -32,7 +32,7 @@ MainWindow::MainWindow(const TGWindow *p, int w,int h)
     g_processDone = true;
     SetFixedRanges();
     
-    fTimer = new TTimer(this, 4000);
+    fTimer = new TTimer(this, 3500);
     fTimer->TurnOn();
     
     fText_run_number = new TText(0.3, 0.3, "Unknown");
@@ -57,8 +57,8 @@ MainWindow::MainWindow(const TGWindow *p, int w,int h)
     
     // fTimer->SetCommand("gMainWindow->HandleTimer(0)");
     
-    hCH0 = new TH1F("hCH0", "Tub 1", WblsDaq::NFADCBins, 0, WblsDaq::NFADCBins);
-    hCH1 = new TH1F("hCH1", "Tub 2", WblsDaq::NFADCBins, 0, WblsDaq::NFADCBins);
+    hCH0 = new TH1F("hCH0", "Tub 1 (Teflon)", WblsDaq::NFADCBins, 0, WblsDaq::NFADCBins);
+    hCH1 = new TH1F("hCH1", "Tub 2 (Al)", WblsDaq::NFADCBins, 0, WblsDaq::NFADCBins);
     hCH2 = new TH1F("hCH2", "Counter 1 (H1 + H3)", WblsDaq::NFADCBins, 0, WblsDaq::NFADCBins);
     hCH3 = new TH1F("hCH3", "Counter 2 (H2 + VC)", WblsDaq::NFADCBins, 0, WblsDaq::NFADCBins);
     
@@ -211,7 +211,7 @@ void MainWindow::SetFixedRanges()
     
     // display ranges of the log(dT/sec) between triggers
     r_dtTrigger_min = -3;
-    r_dtTrigger_max = 0;
+    r_dtTrigger_max = -2;
 }
 
 void MainWindow::SetDynamicRanges()
@@ -584,6 +584,7 @@ int MainWindow::DoDraw()
     h_meanCharge_Counter2Pulse1->GetXaxis()->SetTitle("Run Number");
     h_meanCharge_Counter2Pulse1->Draw("AP");
     h_meanCharge_Counter2Pulse1->GetYaxis()->SetRangeUser(0, r_meanCharge_Counter2);
+    // cout << r_meanCharge_Counter2 << endl;
     h_meanCharge_Counter2Pulse2->Draw("P,same");
     
     // fTempCanvas->cd();

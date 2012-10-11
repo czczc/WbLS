@@ -10,15 +10,15 @@ import sys, os, time
 from random import choice
 
 def monitor(dir):
-    # random = False;
-    random = True;
+    random = False;
+    # random = True;
     oldDir = os.getcwd()
     os.chdir(dir)
     files = [x for x in os.listdir(dir) if x.endswith('.root')]
     # files.sort(key=lambda x: os.stat(x).st_mtime, reverse=True)
     files.sort(key=lambda x: int(x.rstrip('.root').lstrip('rootoutputfile')), reverse=True)
     
-    print files
+    # print files; print
     if len(files) > 1:
         newest = dir+'/'+files[1]
     else:
@@ -38,6 +38,7 @@ def monitor(dir):
     f = open("lastfile.txt", "w")
     f.write(newest)
     f.close()
+    print newest
     
 if __name__ == '__main__':
     if (len(sys.argv)<2):
@@ -47,4 +48,4 @@ if __name__ == '__main__':
         dir = sys.argv[1]
     while True:
         monitor(dir)
-        time.sleep(2)
+        time.sleep(1.5)

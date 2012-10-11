@@ -28,7 +28,7 @@ void WFAnalyzer::Process()
 
 void WFAnalyzer::SetPulseWindow()
 {
-    double ref = 1250 - 100 - 65; // fadc bin of tub1 peak (trigger in the center and tub1 is 65ns before trigger);
+    double ref = 1250 + 160 - 65; // fadc bin of tub1 peak (trigger in the center and tub1 is 65ns before trigger);
     double prePulse_tub = 100; // # of bins to include before the peak for tub (can be longer window)
     double postPulse_tub = 200; // # of bins to include after the peak for tub (can be longer window)
     double prePulse_counter = 50; // # of bins to include before the peak
