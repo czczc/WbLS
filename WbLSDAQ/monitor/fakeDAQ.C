@@ -10,7 +10,7 @@ using namespace std;
 
 void fakeDAQ(const char* outFile = "/Users/chaozhang/Projects/LBNE/WbLS/software/WbLSDAQ/data/test/fakedata.root")
 {
-    WblsDaq::Spinner spinner("/Users/chaozhang/Projects/LBNE/WbLS/software/WbLSDAQ/data/test/example.root");
+    WblsDaq::Spinner spinner("/Users/chaozhang/Projects/LBNE/WbLS/software/WbLSDAQ/data/test/example2.root");
 
     TTree* header = spinner.header_tree();
     TTree* footer = spinner.footer_tree();

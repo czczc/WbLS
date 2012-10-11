@@ -15,6 +15,7 @@ void WblsDaq::set_branch_address(TTree* tree, WblsDaq::Event* obj)
     tree->SetBranchAddress("Channel1",&obj->ch1);
     tree->SetBranchAddress("Channel2",&obj->ch2);
     tree->SetBranchAddress("Channel3",&obj->ch3);
+    tree->SetBranchAddress("TriggerCountFromRunStart",  &obj->time_count);
 }
 void WblsDaq::set_branch_address(TTree* tree, WblsDaq::Header* obj)
 {
@@ -34,6 +35,7 @@ void WblsDaq::set_branch_address(TTree* tree, WblsDaq::Header* obj)
     tree->SetBranchAddress("Channel2device",  &obj->ch2_device);
     tree->SetBranchAddress("Channel3device",  &obj->ch3_device);
     tree->SetBranchAddress("PedestalSubstructedAtRun",  &obj->pedestal);
+    tree->SetBranchAddress("PerformanceFrequency",  &obj->perform_freq);
 }
 void WblsDaq::set_branch_address(TTree* tree, WblsDaq::Footer* obj)
 {
@@ -143,22 +145,25 @@ void WblsDaq::Spinner::PrintRunInfo()
 {
     WblsDaq::Header* h = header();
     WblsDaq::Footer* f = footer();
-    cout << "run_number:" << h->run_number << endl;
-    cout << "  runstart:" << h->runstart << endl;
-    cout << "    isdata:" << h->isdata << endl;
-    cout << "     nbits:" << h->nbits << endl;
-    cout << "  freqtype:" << h->freqtype << endl;
-    cout << "   runtype:" << h->runtype << endl;
-    cout << "sampletype:" << h->sampletype << endl;
-    cout << "  ch0_gain:" << h->ch0_gain << endl;
-    cout << "  ch1_gain:" << h->ch1_gain << endl;
-    cout << "  ch2_gain:" << h->ch2_gain << endl;
-    cout << "  ch3_gain:" << h->ch3_gain << endl;
-    cout << "ch0_device:" << h->ch0_device << endl;
-    cout << "ch1_device:" << h->ch1_device << endl;
-    cout << "ch2_device:" << h->ch2_device << endl;
-    cout << "ch3_device:" << h->ch3_device << endl;
-    cout << "  pedestal:" << h->pedestal << endl;
+    cout << "  run_number:" << h->run_number << endl;
+    cout << "    runstart:" << h->runstart << endl;
+    cout << "      isdata:" << h->isdata << endl;
+    cout << "       nbits:" << h->nbits << endl;
+    cout << "    freqtype:" << h->freqtype << endl;
+    cout << "     runtype:" << h->runtype << endl;
+    cout << "  sampletype:" << h->sampletype << endl;
+    cout << "    ch0_gain:" << h->ch0_gain << endl;
+    cout << "    ch1_gain:" << h->ch1_gain << endl;
+    cout << "    ch2_gain:" << h->ch2_gain << endl;
+    cout << "    ch3_gain:" << h->ch3_gain << endl;
+    cout << "  ch0_device:" << h->ch0_device << endl;
+    cout << "  ch1_device:" << h->ch1_device << endl;
+    cout << "  ch2_device:" << h->ch2_device << endl;
+    cout << "  ch3_device:" << h->ch3_device << endl;
+    cout << "    pedestal:" << h->pedestal << endl;
+    cout << "    pedestal:" << h->pedestal << endl;
+    cout << "perform_freq:" << h->perform_freq << endl;
+    
     cout << "   runstop:" << f->runstop << endl;
     cout << "   nevents:" << f->nevents << endl;
 }

@@ -28,27 +28,28 @@ void WFAnalyzer::Process()
 
 void WFAnalyzer::SetPulseWindow()
 {
-    double ref = 1250; // fadc bin of tub1 peak;
+    double ref = 1250 - 100 - 65; // fadc bin of tub1 peak (trigger in the center and tub1 is 65ns before trigger);
     double prePulse_tub = 100; // # of bins to include before the peak for tub (can be longer window)
     double postPulse_tub = 200; // # of bins to include after the peak for tub (can be longer window)
     double prePulse_counter = 50; // # of bins to include before the peak
     double postPulse_counter = 100; // # of bins to include after the peak
     
-    
+    // ____________________________
+    //       |Trigger
     // ____________________________
     // |T1
     // ____________________________
     // |T2
     // ____________________________
-    //    |H1      |VC
+    //    |H1      |H3
     // ____________________________
-    //    |H2      |H3
+    //    |H2      |VC
     
     double T2_to_T1 = 0;
-    double H1_to_T1 = 40;
-    double VC_to_H1 = 150;
-    double H2_to_T1 = 40;
-    double H3_to_H2 = 150;
+    double H1_to_T1 = 46;
+    double H3_to_H1 = 149;
+    double H2_to_T1 = 46;
+    double VC_to_H2 = 149;
     
     // tub 1
     g_tStartTub[0] = ref - prePulse_tub; 
@@ -63,16 +64,16 @@ void WFAnalyzer::SetPulseWindow()
      g_tStopCounterPulse[0][0] = ref + H1_to_T1 + postPulse_counter; 
      
     // counter1 pulse2
-    g_tStartCounterPulse[0][1] = ref + H1_to_T1 + VC_to_H1 - prePulse_counter; 
-     g_tStopCounterPulse[0][1] = ref + H1_to_T1 + VC_to_H1 + postPulse_counter;
+    g_tStartCounterPulse[0][1] = ref + H1_to_T1 + H3_to_H1 - prePulse_counter; 
+     g_tStopCounterPulse[0][1] = ref + H1_to_T1 + H3_to_H1 + postPulse_counter;
     
     // counter2 pulse1
     g_tStartCounterPulse[1][0] = ref + H2_to_T1 - prePulse_counter; 
      g_tStopCounterPulse[1][0] = ref + H2_to_T1 + postPulse_counter; 
      
     // counter2 pulse2
-    g_tStartCounterPulse[1][1] = ref + H2_to_T1 + H3_to_H2 - prePulse_counter; 
-     g_tStopCounterPulse[1][1] = ref + H2_to_T1 + H3_to_H2 + postPulse_counter; 
+    g_tStartCounterPulse[1][1] = ref + H2_to_T1 + VC_to_H2 - prePulse_counter; 
+     g_tStopCounterPulse[1][1] = ref + H2_to_T1 + VC_to_H2 + postPulse_counter; 
 }
 
 void WFAnalyzer::ProcessTub(int tubNo)

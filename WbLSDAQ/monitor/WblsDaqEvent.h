@@ -68,6 +68,7 @@ namespace WblsDaq {
 	    FADCBin ch1[NFADCBins]; // ch1's digitized trace
 	    FADCBin ch2[NFADCBins]; // ch2's digitized trace
 	    FADCBin ch3[NFADCBins]; // ch3's digitized trace
+        Long64_t time_count;    // internal cpu count of the time since start of run
     };
     
     struct Header {
@@ -88,6 +89,7 @@ namespace WblsDaq {
         int ch2_device;         // device on ch2
         int ch3_device;         // device on ch3
         int pedestal;           // 
+        Long64_t perform_freq;  // performance freqency of CPU
     };
 
     struct Footer {

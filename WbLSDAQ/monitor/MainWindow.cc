@@ -59,8 +59,8 @@ MainWindow::MainWindow(const TGWindow *p, int w,int h)
     
     hCH0 = new TH1F("hCH0", "Tub 1", WblsDaq::NFADCBins, 0, WblsDaq::NFADCBins);
     hCH1 = new TH1F("hCH1", "Tub 2", WblsDaq::NFADCBins, 0, WblsDaq::NFADCBins);
-    hCH2 = new TH1F("hCH2", "Counter 1", WblsDaq::NFADCBins, 0, WblsDaq::NFADCBins);
-    hCH3 = new TH1F("hCH3", "Counter 2", WblsDaq::NFADCBins, 0, WblsDaq::NFADCBins);
+    hCH2 = new TH1F("hCH2", "Counter 1 (H1 + H3)", WblsDaq::NFADCBins, 0, WblsDaq::NFADCBins);
+    hCH3 = new TH1F("hCH3", "Counter 2 (H2 + VC)", WblsDaq::NFADCBins, 0, WblsDaq::NFADCBins);
     
     hChargeTub1 = new TH1F("hChargeTub1", "Charge of Tub 1", 100, 1, 7);
     hChargeTub2 = new TH1F("hChargeTub2", "Charge of Tub 2", 100, 1, 7);
@@ -172,7 +172,7 @@ void MainWindow::InitMaps()
     fRunTypeMap[6] = "Beam Medium";
     fRunTypeMap[7] = "Beam High";
     
-    fSampleTypeMap[0] = "Error";
+    fSampleTypeMap[0] = "Unknown";
     fSampleTypeMap[1] = "Air";
     fSampleTypeMap[2] = "Water";
     fSampleTypeMap[3] = "WbLS 1";
@@ -210,8 +210,8 @@ void MainWindow::SetFixedRanges()
     r_meanCharge_Counter2 = 500000.;
     
     // display ranges of the log(dT/sec) between triggers
-    r_dtTrigger_min = -4;
-    r_dtTrigger_max = 1;
+    r_dtTrigger_min = -3;
+    r_dtTrigger_max = 0;
 }
 
 void MainWindow::SetDynamicRanges()
@@ -283,10 +283,10 @@ void MainWindow::SetProperties()
     h_nTriggers->SetTitle("Number of Triggers");
     h_meanCharge_Tub1->SetTitle("Charge of Tub");
     h_meanCharge_Tub2->SetTitle("Charge of Tub");
-    h_meanCharge_Counter1Pulse1->SetTitle("Charge of Counter");
-    h_meanCharge_Counter1Pulse2->SetTitle("Charge of Counter");
-    h_meanCharge_Counter2Pulse1->SetTitle("Charge of Counter");
-    h_meanCharge_Counter2Pulse2->SetTitle("Charge of Counter");
+    h_meanCharge_Counter1Pulse1->SetTitle("Charge of Counter 1");
+    h_meanCharge_Counter1Pulse2->SetTitle("Charge of Counter 1");
+    h_meanCharge_Counter2Pulse1->SetTitle("Charge of Counter 2");
+    h_meanCharge_Counter2Pulse2->SetTitle("Charge of Counter 2");
     
     h_meanCharge_Tub1->SetMarkerColor(kRed);
     h_meanCharge_Tub2->SetMarkerColor(kBlue);
@@ -323,17 +323,17 @@ void MainWindow::Reset()
         hTDCCounter2Pulse1->SetBinContent(bin, 0);
         hTDCCounter2Pulse2->SetBinContent(bin, 0);
     }
-    for (unsigned bin=0; bin<=100; ++bin) {
-        hChargeTub1->SetBinContent(bin, 0);
-        hChargeTub1->SetEntries(0);
-        hChargeTub2->SetBinContent(bin, 0);
-        hChargeTub2->SetEntries(0);
-        
-        hChargeCounter1Pulse1->SetBinContent(bin, 0);
-        hChargeCounter1Pulse2->SetBinContent(bin, 0);
-        hChargeCounter2Pulse1->SetBinContent(bin, 0);
-        hChargeCounter2Pulse2->SetBinContent(bin, 0);
-    }
+    // for (unsigned bin=0; bin<=100; ++bin) {
+    //     hChargeTub1->SetBinContent(bin, 0);
+    //     hChargeTub1->SetEntries(0);
+    //     hChargeTub2->SetBinContent(bin, 0);
+    //     hChargeTub2->SetEntries(0);
+    //     
+    //     hChargeCounter1Pulse1->SetBinContent(bin, 0);
+    //     hChargeCounter1Pulse2->SetBinContent(bin, 0);
+    //     hChargeCounter2Pulse1->SetBinContent(bin, 0);
+    //     hChargeCounter2Pulse2->SetBinContent(bin, 0);
+    // }
     
     s_meanCharge_Tub1 = 0;
     s_meanCharge_Tub2 = 0;
@@ -370,11 +370,18 @@ int MainWindow::LoadLastSpill()
         }
         
         if (g_tLastTrigger<0) {
-            g_tLastTrigger = evt->time;
+            // g_tLastTrigger = evt->time;
+            g_tLastTrigger = evt->time_count;
         }
         else {
-            hDtTriggers->Fill(evt->time - g_tLastTrigger);
-            g_tLastTrigger = evt->time;
+            // hDtTriggers->Fill(TMath::Log10(evt->time - g_tLastTrigger));
+            // g_tLastTrigger = evt->time;
+            // cout << (evt->time_count - g_tLastTrigger)/f_header->perform_freq << endl;
+            
+            hDtTriggers->Fill(TMath::Log10( (evt->time_count - g_tLastTrigger)/f_header->perform_freq) );
+            g_tLastTrigger = evt->time_count;
+            // cout << g_tLastTrigger << endl;
+            
         }
         for (unsigned bin=0; bin<WblsDaq::NFADCBins; ++bin) {
             hCH0->SetBinContent(bin, evt->ch0[bin] + hCH0->GetBinContent(bin));
@@ -437,7 +444,7 @@ int MainWindow::LoadLastSpill()
     h_meanCharge_Counter1Pulse2->SetPoint(h_meanCharge_Counter1Pulse2->GetN(), f_run_number, s_meanCharge_Counter1Pulse2);
     h_meanCharge_Counter2Pulse1->SetPoint(h_meanCharge_Counter2Pulse1->GetN(), f_run_number, s_meanCharge_Counter2Pulse1);
     h_meanCharge_Counter2Pulse2->SetPoint(h_meanCharge_Counter2Pulse2->GetN(), f_run_number, s_meanCharge_Counter2Pulse2);
-    
+    // cout << s_meanCharge_Counter1Pulse1 << ", " << s_meanCharge_Counter1Pulse2 << endl;
     // fSpillTree->Fill();
     g_processDone = true;
     
