@@ -19,8 +19,10 @@ void next(WblsDaq::Spinner& spinner, int reverse=0)
 void testWF()
 {
     gROOT->ProcessLine(".x Load.C");
+    TCanvas *c1 = new TCanvas();
     
-    WblsDaq::Spinner spinner("/Users/chaozhang/Projects/LBNE/WbLS/software/WbLSDAQ/data/test/example.root");
+    // WblsDaq::Spinner spinner("/Users/chaozhang/Projects/LBNE/WbLS/software/WbLSDAQ/data/test/example.root");
+    WblsDaq::Spinner spinner("/Users/chaozhang/Projects/LBNE/WbLS/software/WbLSDAQ/data/beamrun/rootoutputfile2573.root");
     // WblsDaq::Spinner spinner("/Volumes/wblsdaq/WBLS_DATA/FADC_DATA/2012-10-05_ALandTEFLONcosmicsCOINc_1600V/rootoutputfile472.root");
     spinner.PrintRunInfo();
     next(spinner);

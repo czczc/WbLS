@@ -177,9 +177,10 @@ void WFAnalyzer::ProcessTub(int tubNo)
        fTDC_Tub[tubNo-1] = tdc;
      
     // draw trace
-    // TCanvas *c1 = new TCanvas();
-    // TGraph *g = new TGraph(WblsDaq::NFADCBins, xPoints, cleanTrace);
-    // g->Draw("AL");
+    // if (tubNo==1) {
+    //     TGraph *g = new TGraph(WblsDaq::NFADCBins, xPoints, cleanTrace);
+    //     g->Draw("AP");
+    // }
 }
 
 void WFAnalyzer::ProcessCounter(int counterNo)
@@ -260,6 +261,10 @@ void WFAnalyzer::ProcessCounter(int counterNo)
     // TCanvas *c1 = new TCanvas();
     // TGraph *g = new TGraph(WblsDaq::NFADCBins, xPoints, cleanTrace);
     // g->Draw("AL");
+    // if (counterNo==1) {
+    //     TGraph *g = new TGraph(WblsDaq::NFADCBins, xPoints, cleanTrace);
+    //     g->Draw("AP");
+    // }
 }
 
 

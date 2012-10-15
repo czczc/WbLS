@@ -75,19 +75,30 @@ if __name__ == '__main__':
     saveTo = 'nPE_ls.pdf'
     material = 'LS'
     
-    # files = [fwbls2_210, fwbls1_210, fwater_210]
+    # legends = ['Water', 'WbLS 1%', 'WbLS 4%',]
+    # files = [fwater_210, fwbls1_210, fwbls2_210]
     # saveTo = 'nPE_210.pdf'
     # material = '210 MeV'
+    
+    # legends = ['Water', 'WbLS 1%', 'WbLS 4%',]
+    # files = [fwater_475, fwbls1_475, fwbls2_475]
+    # saveTo = 'nPE_475.pdf'
+    # material = '475 MeV'
+    
+    # legends = ['Water', 'WbLS 1%', 'WbLS 4%',]
+    # files = [fwater_2000, fwbls1_2000, fwbls2_2000]
+    # saveTo = 'nPE_2000.pdf'
+    # material = '2 GeV'
     
     count = 0
     for f in files:
         t = f.Get("beamTree")
         histname = names[count]
-        t.Draw("nPE_T1>>nPE_"+histname+"(200, -5e4, 1e5)", "nPE_H1>2e4")
-        # t.Draw("nPE_T1>>nPE_"+histname+"(200, -5e5, 5e6)", "nPE_H1>2e4")
+        # t.Draw("nPE_T1>>nPE_"+histname+"(200, -5e4, 1e5)", "nPE_H1>2e4")
+        t.Draw("nPE_T1>>nPE_"+histname+"(200, -5e5, 5e6)", "nPE_H1>2e4")
         hists.append(gDirectory.FindObject('nPE_'+histname))
         count += 1
-    SetStyle(hists[0], title='Tub 1 (Teflon),'+material, xTitle='Charge')
+    SetStyle(hists[0], title='Tub 1 (Teflon), '+material, xTitle='Charge')
     SetStyle(hists[1], lineColor=ROOT.kRed)
     SetStyle(hists[2], lineColor=ROOT.kBlue)
     hists[0].Draw()

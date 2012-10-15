@@ -177,10 +177,10 @@ void WFAnalyzer::ProcessTub(int tubNo)
        fTDC_Tub[tubNo-1] = tdc;
      
     // draw trace
-    if (tubNo==0) {
-        TGraph *g = new TGraph(WblsDaq::NFADCBins, xPoints, cleanTrace);
-        g->Draw("AL");
-    }
+    // if (tubNo==0) {
+    //     TGraph *g = new TGraph(WblsDaq::NFADCBins, xPoints, cleanTrace);
+    //     g->Draw("AL");
+    // }
 
 }
 
