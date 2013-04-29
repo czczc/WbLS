@@ -1,0 +1,5 @@
+=== Fake Data Monitor ===
+1. ./genFake.py
+2. ./watch.py
+3. root -l run.C
+
