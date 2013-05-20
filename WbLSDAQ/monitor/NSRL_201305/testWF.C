@@ -16,9 +16,57 @@ void next(WblsDaq::Spinner& spinner, int reverse=0)
     
 }
 
+void raw(int eventNo)
+{
+    // WblsDaq::Spinner spinner("/Users/chaozhang/Projects/LBNE/WbLS/software/WbLSDAQ/data/test/example.root");
+    WblsDaq::Spinner spinner("/Users/chaozhang/Projects/LBNE/WbLS/software/WbLSDAQ/data/beamrun2/rootoutputfile5386.root");
+    TCanvas *c1 = new TCanvas();
+    int nevents = spinner.footer()->nevents;
+    cout << nevents << endl;
+    char tmp;
+    if (eventNo == -1) {
+        for (int n=0; n!=nevents; n++) {
+            cout << "event " << n << endl;
+            WblsDaq::Event* evt = spinner.event(n);    
+            double xPoints[WblsDaq::NFADCBins];
+            double yPoints[WblsDaq::NFADCBins];
+            
+            double min = 8300;
+            for (unsigned i=0; i<WblsDaq::NFADCBins; i++) {
+                yPoints[i] = evt->ch3[i];
+                xPoints[i] = i;
+                if (yPoints[i]<min) { min = yPoints[i]; }
+            }
+            TGraph *g = new TGraph(WblsDaq::NFADCBins, xPoints, yPoints);
+            g->Draw("AL");
+            c1->Update();
+            // if (min > 7000) {
+            //     cout << "hit a key: ";
+            //     cin >> tmp;
+            // }
+            cin >> tmp;
+            
+            delete g;
+        }
+    }
+    else {
+        WblsDaq::Event* evt = spinner.event(eventNo);    
+        double xPoints[WblsDaq::NFADCBins];
+        double yPoints[WblsDaq::NFADCBins];
+
+        for (unsigned i=0; i<WblsDaq::NFADCBins; i++) {
+            yPoints[i] = evt->ch3[i];
+            xPoints[i] = i;
+        }
+        TGraph *g = new TGraph(WblsDaq::NFADCBins, xPoints, yPoints);
+        g->Draw("AL");
+    }
+
+    // g->GetXaxis()->SetRangeUser(500, 600);
+}
+
 void testWF()
 {
-    gROOT->ProcessLine(".x Load.C");
     TCanvas *c1 = new TCanvas();
     
     WblsDaq::Spinner spinner("/Users/chaozhang/Projects/LBNE/WbLS/software/WbLSDAQ/data/test/example.root");

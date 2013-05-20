@@ -29,52 +29,94 @@ void WFAnalyzer::Process()
 
 void WFAnalyzer::SetPulseWindow()
 {
-    double ref = 1250 + 160 - 65; // fadc bin of tub1 peak (trigger in the center and tub1 is 65ns before trigger);
-    double prePulse_tub = 100; // # of bins to include before the peak for tub (can be longer window)
-    double postPulse_tub = 200; // # of bins to include after the peak for tub (can be longer window)
+    // setup for NSRL_2012_10
+    // double ref = 1250 + 160 - 65; // fadc bin of tub1 peak (trigger in the center and tub1 is 65ns before trigger);
+    // double prePulse_tub = 100; // # of bins to include before the peak for tub (can be longer window)
+    // double postPulse_tub = 200; // # of bins to include after the peak for tub (can be longer window)
+    // double prePulse_counter = 50; // # of bins to include before the peak
+    // double postPulse_counter = 100; // # of bins to include after the peak
+    // 
+    // // ____________________________
+    // //       |Trigger
+    // // ____________________________
+    // // |T1
+    // // ____________________________
+    // // |T2
+    // // ____________________________
+    // //    |H1      |H3
+    // // ____________________________
+    // //    |H2      |VC
+    // 
+    // double T2_to_T1 = 0;
+    // double H1_to_T1 = 46;
+    // double H3_to_H1 = 149;
+    // double H2_to_T1 = 46;
+    // double VC_to_H2 = 149;
+    
+    // setup for NSRL_2013_05
+    double prePulse_tub = 50; // # of bins to include before the peak for tub (can be longer window)
+    double postPulse_tub = 100; // # of bins to include after the peak for tub (can be longer window)
     double prePulse_counter = 50; // # of bins to include before the peak
     double postPulse_counter = 100; // # of bins to include after the peak
     
     // ____________________________
     //       |Trigger
     // ____________________________
-    // |T1
+    // |T1(MA)     |LED1
     // ____________________________
-    // |T2
+    // |T2(MB)     |LED2
     // ____________________________
-    //    |H1      |H3
+    // |H1         |H3(LED)
     // ____________________________
-    //    |H2      |VC
+    // |H2         |VC
     
-    double T2_to_T1 = 0;
-    double H1_to_T1 = 46;
-    double H3_to_H1 = 149;
-    double H2_to_T1 = 46;
-    double VC_to_H2 = 149;
+    double ref = 500; // everything is ref to 500 ns
+    
+    double T1_to_ref = -107;
+    double T2_to_ref = -107;
+    // double T1_to_ref = 0;
+    // double T2_to_ref = 0;
+    double H1_to_ref = -33;
+    double H2_to_ref = -33;
+    
+    double LED1_to_ref = 536;
+    double LED2_to_ref = 536;
+    double   H3_to_ref = 600;
+    double   VC_to_ref = 553;
+
     
     // tub 1
-    g_tStartTub[0] = ref - prePulse_tub; 
-     g_tStopTub[0] = ref + postPulse_tub;
+    g_tStartTub[0] = ref + T1_to_ref - prePulse_tub; 
+     g_tStopTub[0] = ref + T1_to_ref + postPulse_tub;
     
     // tub 2
-    g_tStartTub[1] = ref + T2_to_T1 - prePulse_tub; 
-     g_tStopTub[1] = ref + T2_to_T1 + postPulse_tub;
+    g_tStartTub[1] = ref + T2_to_ref - prePulse_tub; 
+     g_tStopTub[1] = ref + T2_to_ref + postPulse_tub;
     
+    
+    // led 1
+    g_tStartLED[0] = ref + LED1_to_ref - prePulse_tub; 
+     g_tStopLED[0] = ref + LED1_to_ref + postPulse_tub;
+    
+    // led 2
+    g_tStartLED[1] = ref + LED2_to_ref - prePulse_tub; 
+     g_tStopLED[1] = ref + LED2_to_ref + postPulse_tub;
+     
     // counter1 pulse1
-    g_tStartCounterPulse[0][0] = ref + H1_to_T1 - prePulse_counter; 
-     g_tStopCounterPulse[0][0] = ref + H1_to_T1 + postPulse_counter; 
+    g_tStartCounterPulse[0][0] = ref + H1_to_ref - prePulse_counter; 
+     g_tStopCounterPulse[0][0] = ref + H1_to_ref + postPulse_counter; 
      
     // counter1 pulse2
-    g_tStartCounterPulse[0][1] = ref + H1_to_T1 + H3_to_H1 - prePulse_counter; 
-     g_tStopCounterPulse[0][1] = ref + H1_to_T1 + H3_to_H1 + postPulse_counter;
+    g_tStartCounterPulse[0][1] = ref + H3_to_ref - prePulse_counter; 
+     g_tStopCounterPulse[0][1] = ref + H3_to_ref + postPulse_counter;
     
     // counter2 pulse1
-    g_tStartCounterPulse[1][0] = ref + H2_to_T1 - prePulse_counter; 
-     g_tStopCounterPulse[1][0] = ref + H2_to_T1 + postPulse_counter; 
+    g_tStartCounterPulse[1][0] = ref + H2_to_ref - prePulse_counter; 
+     g_tStopCounterPulse[1][0] = ref + H2_to_ref + postPulse_counter; 
      
     // counter2 pulse2
-    g_tStartCounterPulse[1][1] = ref + H2_to_T1 + VC_to_H2 - prePulse_counter; 
-     g_tStopCounterPulse[1][1] = ref + H2_to_T1 + VC_to_H2 + postPulse_counter; 
+    g_tStartCounterPulse[1][1] = ref + VC_to_ref - prePulse_counter; 
+     g_tStopCounterPulse[1][1] = ref + VC_to_ref + postPulse_counter; 
 }
 
 void WFAnalyzer::ProcessTub(int tubNo)
@@ -91,8 +133,8 @@ void WFAnalyzer::ProcessTub(int tubNo)
         cout << "warning: no such tub!" << endl;
     }
     
-    // calculate baseline, the smaller value of average of 200 bins from (100, 300), (300, 500)
-    const int NBINS_BASELINE = 200;
+    // calculate baseline, the smaller value of average of 200 bins from (100, 200), (250, 350)
+    const int NBINS_BASELINE = 100;
     double bl = TMath::Mean(NBINS_BASELINE, trace+100);
     double bl_tolerance = 4*TMath::RMS(NBINS_BASELINE, trace+100);
     int nBins_used = NBINS_BASELINE;
@@ -104,10 +146,10 @@ void WFAnalyzer::ProcessTub(int tubNo)
             // cout << "removed one bin" << endl;
         }
     }
-    double bl2 = TMath::Mean(NBINS_BASELINE, trace+100+NBINS_BASELINE);
+    double bl2 = TMath::Mean(NBINS_BASELINE, trace+250);
     double bl2_tolerance = 4*TMath::RMS(NBINS_BASELINE, trace+100+NBINS_BASELINE);
     nBins_used = NBINS_BASELINE;
-    for (int i=100+NBINS_BASELINE; i<NBINS_BASELINE+100+NBINS_BASELINE; i++) {
+    for (int i=250; i<250+NBINS_BASELINE; i++) {
         // remove points out of 4 sigma
         if (TMath::Abs(trace[i]-bl2) > bl2_tolerance) {
             bl2 = (bl2*nBins_used - trace[i])/(nBins_used-1);
@@ -164,19 +206,34 @@ void WFAnalyzer::ProcessTub(int tubNo)
     
     // calculate pulse in fixed window
     double charge = 0;
+    double peak = 0;
     double tdc = 0;
+    double charge_led = 0;
+    double peak_led = 0;
     const int THRESHOLD = 100; // threshold for tdc start
+    // const int THRESHOLD_SPE = 100; // threshold for tdc start
     
     for (unsigned i=0; i<WblsDaq::NFADCBins-1; i++) {
         if(i>=g_tStartTub[tubNo-1] && i<=g_tStopTub[tubNo-1]) {
             charge += cleanTrace[i];
             if(cleanTrace[i]<THRESHOLD && cleanTrace[i+1]>THRESHOLD && tdc<1) tdc = i;
+            if (cleanTrace[i]>peak) { peak = cleanTrace[i]; }
+        }
+        if(i>=g_tStartLED[tubNo-1] && i<=g_tStopLED[tubNo-1]) {
+            charge_led += cleanTrace[i];
+            if (cleanTrace[i]>peak_led) { peak_led = cleanTrace[i]; }
             
         }
     }
+    // cout << tubNo << ": " << fBaseLine_Tub[tubNo-1] << ", " << peak << ", " << charge << endl;
+    fTDC_Tub[tubNo-1] = tdc;
+    
     fCharge_Tub[tubNo-1] = charge; 
-       fTDC_Tub[tubNo-1] = tdc;
-     
+    fCharge_LED[tubNo-1] = charge_led; 
+    
+    fPeak_Tub[tubNo-1] = peak; 
+    fPeak_LED[tubNo-1] = peak_led;
+    
     // draw trace
     // if (tubNo==1) {
     //     TGraph *g = new TGraph(WblsDaq::NFADCBins, xPoints, cleanTrace);
@@ -237,8 +294,11 @@ void WFAnalyzer::ProcessCounter(int counterNo)
     
     // calculate pulse in fixed window
     double charge1 = 0;
+    double peak1 = 0;
     double tdc1 = 0;
+    
     double charge2 = 0;
+    double peak2 = 0;
     double tdc2 = 0;
     const int THRESHOLD = 100; // threshold for tdc start
     
@@ -246,11 +306,12 @@ void WFAnalyzer::ProcessCounter(int counterNo)
         if(i>=g_tStartCounterPulse[counterNo-1][0] && i<=g_tStopCounterPulse[counterNo-1][0]) {
             charge1 += cleanTrace[i];
             if(cleanTrace[i]<THRESHOLD && cleanTrace[i+1]>THRESHOLD && tdc1<1) tdc1 = i;
-            
+            if(cleanTrace[i]>peak1) { peak1 = cleanTrace[i]; }
         }
         else if(i>=g_tStartCounterPulse[counterNo-1][1] && i<=g_tStopCounterPulse[counterNo-1][1]) {
             charge2 += cleanTrace[i];
             if(cleanTrace[i]<THRESHOLD && cleanTrace[i+1]>THRESHOLD && tdc2<1) tdc2 = i;
+            if(cleanTrace[i]>peak2) { peak2 = cleanTrace[i]; }
             
         }    
     }
@@ -258,7 +319,21 @@ void WFAnalyzer::ProcessCounter(int counterNo)
     fCharge_Counter[counterNo-1][1] = charge2; 
     fTDC_Counter[counterNo-1][0] = tdc1; 
     fTDC_Counter[counterNo-1][1] = tdc2; 
-      
+    
+    fPeak_Counter[counterNo-1][0] = peak1; 
+    fPeak_Counter[counterNo-1][1] = peak2;
+    
+    
+    if (counterNo==1) {
+        if (peak2 > 3000) {
+            isLED = true;
+            // cout << "LED: " << peak2 << endl;
+        }
+        else {
+            isLED = false;
+            // cout << "NOT LED: " << endl;
+        }
+    }
     // draw trace
     // TCanvas *c1 = new TCanvas();
     // TGraph *g = new TGraph(WblsDaq::NFADCBins, xPoints, cleanTrace);

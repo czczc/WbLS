@@ -8,13 +8,19 @@ Created by Chao Zhang on 2012-10-03.
 
 import sys, os, time
 from random import choice
+import re
 
 def watch(dir):
     random = False;
     # random = True;
     oldDir = os.getcwd()
     os.chdir(dir)
-    files = [x for x in os.listdir(dir) if x.startswith('rootoutputfile')]
+    
+    files = []
+    for x in os.listdir(dir):
+        if x.startswith('rootoutputfile') and x.find('LED') == -1:
+            files.append(x)
+        
     # files.sort(key=lambda x: os.stat(x).st_mtime, reverse=True)
     files.sort(key=lambda x: int(x.rstrip('.root').lstrip('rootoutputfile')), reverse=True)
     
@@ -42,9 +48,9 @@ def watch(dir):
     
 if __name__ == '__main__':
     if (len(sys.argv)<2):
-        # dir = '/Volumes/wblsdaq/WBLS_DATA/FADC_DATA/2012-10-05_ALandTEFLONcosmicsCOINc_1600V'
-        dir = '/Users/chaozhang/Projects/LBNE/WbLS/software/WbLSDAQ/data/test'
-        # dir = '/Volumes/wblsdaq/WBLS_DATA/FADC_DATA/beamrun'
+        # dir = '/Users/chaozhang/Projects/LBNE/WbLS/software/WbLSDAQ/data/test'
+        # dir = '/Users/chaozhang/Projects/LBNE/WbLS/software/WbLSDAQ/data/test/misc/testing_LEDonly'
+        dir = '/Volumes/wblsdaq/WBLS_DATA/FADC_DATA/beamrun2'
     else:
         dir = sys.argv[1]
     while True:
