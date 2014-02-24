@@ -26,6 +26,7 @@ Thumbs.db
 geofile.txt
 *.log
 lastfile.txt
+*.mac
 
 # tmp directories#
 ###################
@@ -38,3 +39,4 @@ old/
 pdf/
 vis_files/
 data/
+
