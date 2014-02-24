@@ -12,6 +12,6 @@
 /WCSim/tuning/tvspacing 100
 
 # Parameters fo Scintillation - Chao Zhang
-/WCSim/tuning/photonYield 90
+/WCSim/tuning/photonYield 0
 
 

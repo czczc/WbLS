@@ -47,11 +47,11 @@
 # command to choose save or not save the pi0 info 07/03/10 (XQ)
 /WCSim/SavePi0 true
 
-# /vis/scene/create
-# /vis/open OGLSX
-# /vis/viewer/set/upVector 0 0 1
-# # /vis/viewer/set/viewpointThetaPhi 45 45 deg
-# /vis/viewer/set/viewpointThetaPhi 120 90 deg
+/vis/scene/create
+/vis/open OGLSX
+/vis/viewer/set/upVector 0 0 1
+/vis/viewer/set/viewpointThetaPhi 45 45 deg
+/vis/viewer/set/viewpointThetaPhi 120 90 deg
 
 #/vis/open RayTracer
 #/vis/viewer/set/upVector 0 0 1
@@ -72,13 +72,21 @@
 
 # Or you can use the G4 Particle Gun
 /mygen/generator normal
-/gun/particle mu+
-/gun/energy 150 MeV
+/gun/particle gamma
+# /gun/energy 150 MeV
+# /gun/particle pi-
+# /gun/energy 341 MeV
+/gun/energy 230 MeV
 # /gun/particle kaon+
 #/gun/particle pi0
 # /gun/energy 105 MeV
 /gun/direction 0 1 0
 /gun/position 0 0 0
+
+# /gun/particle e-
+# /gun/energy 460 MeV
+# /gun/direction 0 -1 0
+# /gun/position 0 0 0
 
 /WCSim/ConstructWLS false
 /WCSim/ConstructWLSP false
@@ -109,7 +117,7 @@
 
 /WCSim/Construct
 
-/geometry/test/grid_test true
+# /geometry/test/grid_test true
 
 ## change the name of the output root file, default = wcsim.root
 /WCSimIO/RootFile test.root
